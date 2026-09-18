@@ -7,6 +7,12 @@ node_modules/
 dist/
 build/
 *.tsbuildinfo
+# Bundle do frontend — artefato de build, não versionado.
+packages/web/dist/
+
+# `.env*` abaixo NÃO pode voltar a ser um catch-all: `.env.example` é versionado
+# (é o contrato das variáveis de ambiente) e a exceção `!` só vale se o
+# ignore vier antes.
 
 # Variáveis de ambiente — nunca versionadas.
 .env
@@ -54,4 +60,3 @@ coverage/
 .nyc_output/
 
 .vercel
-.env*

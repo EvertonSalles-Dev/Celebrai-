@@ -18,6 +18,39 @@ SQLite não funciona em produção por esse motivo.
 
 ---
 
+## Por que o erro `No Output Directory named "dist"` acontecia
+O build terminava certo, mas a Vercel procurava o bundle em `./dist` na raiz —
+e o frontend é gerado em `packages/web/dist` (é o `outDir` do Vite do workspace).
+Como a checagem do output directory acontece **depois** do build, o log mostrava
+"Build completed" seguido de:
+
+```
+Error: No Output Directory named "dist" found after the Build completed.
+```
+
+Três coisas se somavam:
+
+1. `outputDirectory` apontava para `dist` na raiz.
+2. `framework: "vite"` fazia a Vercel aplicar o preset do Vite, que também
+   sobrescreve o output directory e o build command declarados no arquivo.
+3. `scripts/build-vercel.mjs` espelhava `packages/web/dist` em `./dist`. Além de
+   ser uma pasta de 2º nível com o `@vercel/static-build` (ele copia `dist/`
+   para dentro de `dist/dist/`), a cópia correspondia a `.gitignore: dist/` —
+   ou seja, a Vercel podia receber apenas o `dist/` da raiz, que ficava de fora
+   do repositório.
+
+A correção é apontar o output directory para o local real do bundle, desligar o
+preset (`"framework": null`, que preserva o build customizado do `vercel.json`)
+e deixar o script apenas validar que `packages/web/dist/index.html` existe —
+assim uma falha do frontend aponta a causa real em vez de um erro genérico de
+output directory.
+
+> A Vercel **não** usa `outputDirectory` em runtime: no deploy ela empacota a
+> pasta indicada em `.vercel/output/static`. O `.gitignore` pode continuar
+> listando `dist/` e `packages/web/dist/`.
+
+---
+
 ## Por que o `405 Method Not Allowed` acontecia
 
 O `vercel.json` original mandava **tudo** para o `index.html`:
@@ -145,7 +178,8 @@ schema de produção — que é o comportamento desejado.
 | Comando | O que faz | Quando usar |
 |---|---|---|
 | `npm run dev` | API + front em paralelo | Desenvolvimento |
-| `npm run build` | Build da API e do front | CI / reproduzir a Vercel |
+| `npm run build` | Build da API e do front (front em `packages/web/dist`) | CI / reproduzir a Vercel |
+| `npm run build:vercel` | Valida que o bundle do front foi gerado | É o que o `buildCommand` da Vercel roda |
 | `npm run build:local` | Build **+ restaura o Client do `.env`** | Build na sua máquina |
 | `npm run build:web` | Só o frontend | Deploy (é o que a Vercel roda) |
 | `npm run db:bootstrap` | Regenera o Client conforme o `.env` | Após `npm run build` |

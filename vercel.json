@@ -2,8 +2,8 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "installCommand": "npm install --include=dev --include=optional",
   "buildCommand": "node scripts/build-vercel.mjs",
-  "outputDirectory": "dist",
-  "framework": "vite",
+  "outputDirectory": "packages/web/dist",
+  "framework": null,
   "functions": {
     "api/index.ts": {
       "includeFiles": "packages/api/**",
