@@ -51,7 +51,7 @@ export function AuditPage() {
       <header className="mb-6">
         <Link
           to={`/eventos/${id}`}
-          className="mb-4 inline-flex items-center gap-1.5 text-sm text-ink-500 transition-colors hover:text-ink-800"
+          className="mb-4 inline-flex items-center gap-1.5 text-sm text-wedding-500 transition-colors hover:text-wedding-800"
         >
           <ArrowLeft className="h-4 w-4" />
           {event ? (event.hostsName ?? event.title) : 'Voltar'}
@@ -59,14 +59,14 @@ export function AuditPage() {
 
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight text-ink-900">Auditoria</h1>
-            <p className="mt-1 text-sm text-ink-500">
+            <h1 className="text-3xl font-display font-semibold tracking-tight text-wedding-900">Auditoria</h1>
+            <p className="mt-1 text-sm text-wedding-500">
               Histórico completo das ações realizadas neste evento.
             </p>
           </div>
 
           <div className="flex items-center gap-2">
-            <Filter className="h-4 w-4 text-ink-400" />
+            <Filter className="h-4 w-4 text-wedding-400" />
             <Select
               value={action}
               onChange={(event) => {
@@ -117,7 +117,7 @@ export function AuditPage() {
             {logs.map((log) => {
               const config = ACTION_CONFIG[log.action] ?? {
                 icon: Activity,
-                tone: 'bg-ink-100 text-ink-600',
+                tone: 'bg-wedding-100 text-wedding-600',
               };
               const Icon = config.icon;
 
@@ -129,24 +129,24 @@ export function AuditPage() {
 
                   <div className="min-w-0 flex flex-1">
                     <div className="flex flex-wrap items-start justify-between gap-2">
-                      <p className="text-sm font-medium text-ink-900">
+                      <p className="text-sm font-medium text-wedding-900">
                         {log.description ?? log.action}
                       </p>
-                      <time className="shrink-0 text-xs text-ink-400">
+                      <time className="shrink-0 text-xs text-wedding-400">
                         {formatDateTime(log.createdAt)}
                       </time>
                     </div>
 
-                    <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-ink-500">
+                    <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-wedding-500">
                       <span className="flex items-center gap-1.5">
-                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-ink-100 text-[9px] font-semibold text-ink-600">
+                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-wedding-100 text-[9px] font-semibold text-wedding-600">
                           {log.actorName ? initials(log.actorName) : '?'}
                         </span>
                         {log.actorName ?? log.user?.name ?? 'Convidado'}
                       </span>
 
                       {log.actorRole && (
-                        <span className="rounded-md bg-ink-100 px-1.5 py-0.5 font-medium">
+                        <span className="rounded-md bg-wedding-100 px-1.5 py-0.5 font-medium">
                           {ROLE_LABELS[log.actorRole] ?? log.actorRole}
                         </span>
                       )}
@@ -164,10 +164,10 @@ export function AuditPage() {
                     {/* Metadados relevantes */}
                     {log.metadata && Object.keys(log.metadata).length > 0 && (
                       <details className="mt-2">
-                        <summary className="cursor-pointer text-xs text-ink-400 hover:text-ink-600">
+                        <summary className="cursor-pointer text-xs text-wedding-400 hover:text-wedding-600">
                           Detalhes
                         </summary>
-                        <pre className="mt-2 overflow-x-auto rounded-lg bg-ink-50 p-3 font-mono text-[11px] text-ink-600">
+                        <pre className="mt-2 overflow-x-auto rounded-lg bg-wedding-50 p-3 font-mono text-[11px] text-wedding-600">
                           {JSON.stringify(log.metadata, null, 2)}
                         </pre>
                       </details>
@@ -180,7 +180,7 @@ export function AuditPage() {
 
           {totalPages > 1 && (
             <div className="mt-6 flex items-center justify-between">
-              <p className="text-sm text-ink-500">
+              <p className="text-sm text-wedding-500">
                 Página {page} de {totalPages} · {meta?.total} registros
               </p>
               <div className="flex gap-2">
@@ -217,12 +217,12 @@ const ACTION_CONFIG: Record<
   string,
   { icon: typeof Activity; tone: string }
 > = {
-  'auth.login': { icon: LogIn, tone: 'bg-ink-100 text-ink-600' },
-  'auth.logout': { icon: LogOut, tone: 'bg-ink-100 text-ink-500' },
+  'auth.login': { icon: LogIn, tone: 'bg-wedding-100 text-wedding-600' },
+  'auth.logout': { icon: LogOut, tone: 'bg-wedding-100 text-wedding-500' },
   'auth.login_failed': { icon: ShieldAlert, tone: 'bg-danger-100 text-danger-600' },
 
   'guest.created': { icon: UserPlus, tone: 'bg-blue-100 text-blue-600' },
-  'guest.updated': { icon: Activity, tone: 'bg-ink-100 text-ink-600' },
+  'guest.updated': { icon: Activity, tone: 'bg-wedding-100 text-wedding-600' },
   'guest.deleted': { icon: XCircle, tone: 'bg-danger-100 text-danger-600' },
   'guest.imported': { icon: FileText, tone: 'bg-blue-100 text-blue-600' },
 

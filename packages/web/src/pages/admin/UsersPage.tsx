@@ -76,8 +76,8 @@ export function UsersPage() {
     <div className="mx-auto max-w-5xl">
       <header className="mb-6 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-ink-900">Usuários</h1>
-          <p className="mt-1 text-sm text-ink-500">
+          <h1 className="text-3xl font-display font-semibold tracking-tight text-wedding-900">Usuários</h1>
+          <p className="mt-1 text-sm text-wedding-500">
             Gerencie quem tem acesso à plataforma e com qual perfil.
           </p>
         </div>
@@ -133,17 +133,17 @@ export function UsersPage() {
                 <tr key={user.id}>
                   <td>
                     <div className="flex items-center gap-3">
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-ink-900 text-xs font-semibold text-white">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-wedding-900 text-xs font-semibold text-white">
                         {initials(user.name)}
                       </div>
                       <div className="min-w-0">
-                        <p className="truncate font-medium text-ink-900">
+                        <p className="truncate font-medium text-wedding-900">
                           {user.name}
                           {user.id === currentUser?.id && (
-                            <span className="ml-2 text-xs text-ink-400">(você)</span>
+                            <span className="ml-2 text-xs text-wedding-400">(você)</span>
                           )}
                         </p>
-                        <p className="truncate text-xs text-ink-400">{user.email}</p>
+                        <p className="truncate text-xs text-wedding-400">{user.email}</p>
                       </div>
                     </div>
                   </td>
@@ -168,11 +168,11 @@ export function UsersPage() {
                     </span>
                   </td>
 
-                  <td className="text-xs text-ink-500">
+                  <td className="text-xs text-wedding-500">
                     {user.lastLoginAt ? formatDateTime(user.lastLoginAt) : 'Nunca acessou'}
                   </td>
 
-                  <td className="text-center tabular-nums text-ink-600">
+                  <td className="text-center tabular-nums text-wedding-600">
                     {user.role === 'ADMIN'
                       ? (user._count?.events ?? 0)
                       : (user._count?.memberships ?? 0)}
@@ -272,11 +272,11 @@ function RoleCard({
 }) {
   return (
     <div className="card p-4">
-      <div className="w-fit rounded-xl bg-ink-100 p-2 text-ink-600">
+      <div className="w-fit rounded-xl bg-wedding-100 p-2 text-wedding-600">
         <Icon className="h-4 w-4" />
       </div>
-      <p className="mt-3 text-sm font-semibold text-ink-900">{title}</p>
-      <p className="mt-1 text-xs leading-relaxed text-ink-500">{description}</p>
+      <p className="mt-3 text-sm font-semibold text-wedding-900">{title}</p>
+      <p className="mt-1 text-xs leading-relaxed text-wedding-500">{description}</p>
     </div>
   );
 }

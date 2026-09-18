@@ -62,7 +62,7 @@ export function Modal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center overflow-y-auto bg-ink-950/50 p-0 backdrop-blur-sm sm:items-center sm:p-4"
+      className="fixed inset-0 z-50 flex items-end justify-center overflow-y-auto bg-wedding-950/50 p-0 backdrop-blur-sm sm:items-center sm:p-4"
       onClick={() => closable && onClose()}
       role="presentation"
     >
@@ -77,22 +77,22 @@ export function Modal({
         )}
         onClick={(event) => event.stopPropagation()}
       >
-        <header className="flex items-start justify-between gap-4 border-b border-ink-100 px-6 py-4">
+        <header className="flex items-start justify-between gap-4 border-b border-wedding-100 px-6 py-4">
           <div>
             <h2
               id="modal-title"
-              className={cn('text-lg font-semibold', danger ? 'text-danger-700' : 'text-ink-900')}
+              className={cn('text-lg font-semibold', danger ? 'text-danger-700' : 'text-wedding-900')}
             >
               {title}
             </h2>
-            {description && <p className="mt-1 text-sm text-ink-500">{description}</p>}
+            {description && <p className="mt-1 text-sm text-wedding-500">{description}</p>}
           </div>
           {closable && (
             <button
               type="button"
               onClick={onClose}
               aria-label="Fechar"
-              className="rounded-lg p-1.5 text-ink-400 transition-colors hover:bg-ink-100 hover:text-ink-700"
+              className="rounded-lg p-1.5 text-wedding-400 transition-colors hover:bg-wedding-100 hover:text-wedding-700"
             >
               <X className="h-5 w-5" />
             </button>
@@ -102,7 +102,7 @@ export function Modal({
         {children && <div className="max-h-[65vh] overflow-y-auto px-6 py-5">{children}</div>}
 
         {footer && (
-          <footer className="safe-bottom flex-col-reverse gap-2 border-t border-ink-100 px-6 py-4 sm:flex-row sm:justify-end">
+          <footer className="safe-bottom flex-col-reverse gap-2 border-t border-wedding-100 px-6 py-4 sm:flex-row sm:justify-end">
             {footer}
           </footer>
         )}

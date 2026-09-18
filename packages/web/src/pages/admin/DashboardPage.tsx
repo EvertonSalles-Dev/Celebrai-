@@ -59,14 +59,14 @@ export function DashboardPage() {
       {/* Cabeçalho */}
       <header className="mb-8 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-sm text-ink-500">
+          <p className="text-sm text-wedding-600">
             {greeting()}
             {user ? `, ${firstName(user.name)}` : ''} 👋
           </p>
-          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-ink-900">
+          <h1 className="mt-1 text-3xl font-display font-semibold tracking-tight text-wedding-900">
             Visão geral dos eventos
           </h1>
-          <p className="mt-1 text-sm text-ink-500">
+          <p className="mt-1 text-sm text-wedding-700">
             Acompanhe convidados, confirmações e entradas em tempo real.
           </p>
         </div>
@@ -92,7 +92,7 @@ export function DashboardPage() {
           {/* Métricas consolidadas */}
           {(events?.length ?? 0) > 0 && (
             <section className="mb-8">
-              <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-ink-400">
+              <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-wedding-600">
                 Totais consolidados
               </h2>
 
@@ -142,12 +142,12 @@ export function DashboardPage() {
           {/* Lista de eventos */}
           <section>
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-sm font-semibold uppercase tracking-wider text-ink-400">
+              <h2 className="text-sm font-semibold uppercase tracking-wider text-wedding-600">
                 Seus eventos
               </h2>
               <Link
                 to="/eventos"
-                className="text-sm font-medium text-ink-600 transition-colors hover:text-ink-900"
+                className="text-sm font-medium text-wedding-700 transition-colors hover:text-wedding-900"
               >
                 Ver todos
               </Link>
@@ -224,7 +224,7 @@ function EventCard({
     <article className="card group overflow-hidden transition-shadow hover:shadow-card">
       <div className="flex gap-4 p-5">
         {/* Foto / placeholder */}
-        <div className="hidden h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-ink-100 sm:block">
+        <div className="hidden h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-wedding-100 sm:block">
           {event.coverImageUrl ? (
             <img
               src={event.coverImageUrl}
@@ -233,7 +233,7 @@ function EventCard({
               loading="lazy"
             />
           ) : (
-            <div className="flex h-full w-full items-center justify-center text-ink-300">
+            <div className="flex h-full w-full items-center justify-center text-wedding-400">
               <CalendarHeart className="h-7 w-7" />
             </div>
           )}
@@ -242,17 +242,17 @@ function EventCard({
         <div className="min-w-0 flex flex-1">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
-              <h3 className="truncate text-base font-semibold text-ink-900">
+              <h3 className="truncate text-lg font-display font-semibold text-wedding-900">
                 {event.hostsName ?? event.title}
               </h3>
-              <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm text-ink-500">
+              <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm text-wedding-600">
                 <span className="flex items-center gap-1.5">
                   <CalendarHeart className="h-3.5 w-3.5" />
                   {formatShortDate(event.eventDate)} às {event.startTime}
                 </span>
                 {event.venue && (
                   <>
-                    <span className="text-ink-300">·</span>
+                    <span className="text-wedding-400">·</span>
                     <span className="truncate">
                       {event.venue.name}, {event.venue.city}/{event.venue.state}
                     </span>
@@ -273,13 +273,13 @@ function EventCard({
 
           {/* Progresso de confirmação */}
           <div className="mt-3.5">
-            <div className="h-1.5 w-full overflow-hidden rounded-full bg-ink-100">
+            <div className="h-1.5 w-full overflow-hidden rounded-full bg-wedding-100">
               <div
                 className="h-full rounded-full bg-success-500 transition-all duration-500"
                 style={{ width: `${confirmedPercent}%` }}
               />
             </div>
-            <p className="mt-1.5 flex items-center gap-1 text-xs text-ink-400">
+            <p className="mt-1.5 flex items-center gap-1 text-xs text-wedding-600">
               <TrendingUp className="h-3 w-3" />
               {confirmedPercent}% de confirmações
             </p>
@@ -302,7 +302,7 @@ function EventCard({
             </Link>
             <Link
               to={`/eventos/${event.id}`}
-              className="ml-auto inline-flex items-center gap-1 text-xs font-medium text-ink-500 transition-colors hover:text-ink-900"
+              className="ml-auto inline-flex items-center gap-1 text-xs font-medium text-wedding-600 transition-colors hover:text-wedding-900"
             >
               Detalhes
               <ArrowRight className="h-3.5 w-3.5" />
@@ -324,7 +324,7 @@ function MiniStat({
   tone?: 'neutral' | 'success' | 'warning' | 'info';
 }) {
   const toneClass = {
-    neutral: 'text-ink-900',
+    neutral: 'text-wedding-900',
     success: 'text-success-600',
     warning: 'text-warning-600',
     info: 'text-blue-600',
@@ -333,7 +333,7 @@ function MiniStat({
   return (
     <div>
       <p className={`text-lg font-semibold tabular-nums ${toneClass}`}>{value}</p>
-      <p className="text-[10px] uppercase tracking-wider text-ink-400">{label}</p>
+      <p className="text-[10px] uppercase tracking-wider text-wedding-500">{label}</p>
     </div>
   );
 }

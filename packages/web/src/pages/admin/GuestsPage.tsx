@@ -172,8 +172,8 @@ export function GuestsPage() {
     <div className="mx-auto max-w-7xl">
       <header className="mb-6 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-ink-900">Convidados</h1>
-          <p className="mt-1 text-sm text-ink-500">
+          <h1 className="text-3xl font-display font-semibold tracking-tight text-wedding-900">Convidados</h1>
+          <p className="mt-1 text-sm text-wedding-500">
             {meta ? `${meta.total} ${meta.total === 1 ? 'convidado' : 'convidados'}` : 'Carregando...'}
           </p>
         </div>
@@ -205,7 +205,7 @@ export function GuestsPage() {
         <div className="flex flex-wrap gap-2">
           <div className="relative min-w-[240px] flex flex-1">
             <Search
-              className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400"
+              className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-wedding-400"
               aria-hidden
             />
             <input
@@ -319,12 +319,12 @@ export function GuestsPage() {
                 {guests.map((guest) => (
                   <tr key={guest.id}>
                     <td>
-                      <p className="font-medium text-ink-900">{guest.fullName}</p>
+                      <p className="font-medium text-wedding-900">{guest.fullName}</p>
                       {guest.party && (
-                        <p className="text-xs text-ink-400">{guest.party.name}</p>
+                        <p className="text-xs text-wedding-400">{guest.party.name}</p>
                       )}
                       {guest.invitation?.response && (
-                        <p className="text-xs text-ink-400">
+                        <p className="text-xs text-wedding-400">
                           {guest.invitation.response.attendingCount} confirmado(s)
                           {guest.invitation.response.cpfMasked
                             ? ` · CPF ${guest.invitation.response.cpfMasked}`
@@ -342,7 +342,7 @@ export function GuestsPage() {
                       {guest.invitation?.checkInCount ? (
                         <CheckCircle2 className="mx-auto h-4 w-4 text-success-600" />
                       ) : (
-                        <span className="text-xs text-ink-300">—</span>
+                        <span className="text-xs text-wedding-300">—</span>
                       )}
                     </td>
                     <td>
@@ -364,7 +364,7 @@ export function GuestsPage() {
                                 <Link
                                   to={`/eventos/${eventId}/convites`}
                                   title="Ver QR Code"
-                                  className="rounded-lg p-1.5 text-ink-400 transition-colors hover:bg-ink-100 hover:text-ink-700"
+                                  className="rounded-lg p-1.5 text-wedding-400 transition-colors hover:bg-wedding-100 hover:text-wedding-700"
                                 >
                                   <Link2 className="h-3.5 w-3.5" />
                                 </Link>
@@ -398,7 +398,7 @@ export function GuestsPage() {
           {/* Paginação */}
           {totalPages > 1 && (
             <div className="mt-4 flex items-center justify-between">
-              <p className="text-sm text-ink-500">
+              <p className="text-sm text-wedding-500">
                 Página {currentPage} de {totalPages}
               </p>
               <div className="flex gap-2">
@@ -475,8 +475,8 @@ export function GuestsPage() {
               </span>
             </div>
 
-            <div className="rounded-xl border-ink-200 bg-ink-50 p-3.5">
-              <p className="break-all font-mono text-xs text-ink-700">{shareModal.link}</p>
+            <div className="rounded-xl border-wedding-200 bg-wedding-50 p-3.5">
+              <p className="break-all font-mono text-xs text-wedding-700">{shareModal.link}</p>
             </div>
 
             <div className="flex gap-2">
@@ -530,8 +530,8 @@ function ActionButton({
       aria-label={title}
       onClick={onClick}
       className={`rounded-lg p-1.5 transition-colors ${danger
-        ? 'text-ink-400 hover:bg-danger-50 hover:text-danger-600'
-        : 'text-ink-400 hover:bg-ink-100 hover:text-ink-700'
+        ? 'text-wedding-400 hover:bg-danger-50 hover:text-danger-600'
+        : 'text-wedding-400 hover:bg-wedding-100 hover:text-wedding-700'
         }`}
     >
       {icon}
@@ -677,16 +677,16 @@ function ImportGuestsModal({
     >
       <div className="space-y-5">
         {/* Modelo */}
-        <div className="rounded-xl border-ink-200 bg-ink-50 p-4">
-          <p className="text-xs font-semibold uppercase tracking-wider text-ink-500">
+        <div className="rounded-xl border-wedding-200 bg-wedding-50 p-4">
+          <p className="text-xs font-semibold uppercase tracking-wider text-wedding-500">
             Formato esperado
           </p>
-          <pre className="mt-2 overflow-x-auto font-mono text-xs leading-relaxed text-ink-700">
+          <pre className="mt-2 overflow-x-auto font-mono text-xs leading-relaxed text-wedding-700">
             {`nome,email,whatsapp,quantidade_permitida
 João da Silva,joao@email.com,21999999,2
 Maria Souza,maria@email.com,21988888,1`}
           </pre>
-          <p className="mt-2 text-xs text-ink-400">
+          <p className="mt-2 text-xs text-wedding-400">
             Uma linha por convidado. O cabeçalho é opcional.
           </p>
         </div>
@@ -732,7 +732,7 @@ Maria Souza,maria@email.com,21988888,1`}
                 <tbody>
                   {result.preview.map((row) => (
                     <tr key={row.line}>
-                      <td className="text-xs text-ink-400">{row.line}</td>
+                      <td className="text-xs text-wedding-400">{row.line}</td>
                       <td className="font-medium">{row.fullName || '—'}</td>
                       <td className="text-xs">{row.email || '—'}</td>
                       <td className="text-center tabular-nums">{row.allowedCompanions}</td>
@@ -751,7 +751,7 @@ Maria Souza,maria@email.com,21988888,1`}
               </table>
             </div>
 
-            <p className="text-xs text-ink-400">
+            <p className="text-xs text-wedding-400">
               Linhas com erro ou duplicadas serão ignoradas. A importação gera um convite individual
               para cada convidado.
             </p>
@@ -772,16 +772,16 @@ function SummaryBox({
   tone?: 'neutral' | 'success' | 'danger' | 'warning';
 }) {
   const toneClass = {
-    neutral: 'text-ink-900',
+    neutral: 'text-wedding-900',
     success: 'text-success-600',
     danger: 'text-danger-600',
     warning: 'text-warning-600',
   }[tone];
 
   return (
-    <div className="rounded-xl border-ink-100 bg-white p-3 text-center">
+    <div className="rounded-xl border-wedding-100 bg-white p-3 text-center">
       <p className={`text-xl font-semibold tabular-nums ${toneClass}`}>{value}</p>
-      <p className="text-[10px] uppercase tracking-wider text-ink-400">{label}</p>
+      <p className="text-[10px] uppercase tracking-wider text-wedding-400">{label}</p>
     </div>
   );
 }

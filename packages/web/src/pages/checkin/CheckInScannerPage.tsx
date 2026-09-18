@@ -126,7 +126,7 @@ export function CheckInScannerPage() {
 
   if (loadingEvents) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-ink-50">
+      <div className="flex min-h-screen items-center justify-center bg-wedding-50">
         <LoadingState label="Preparando o scanner..." />
       </div>
     );
@@ -134,7 +134,7 @@ export function CheckInScannerPage() {
 
   if (!event) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-ink-50 px-5">
+      <div className="flex min-h-screen items-center justify-center bg-wedding-50 px-5">
         <EmptyState
           icon={CalendarHeart}
           title="Nenhum evento selecionado"
@@ -152,33 +152,33 @@ export function CheckInScannerPage() {
   const isOverrideVisible = result?.outcome === 'ALREADY_USED' && result.canOverride;
 
   return (
-    <div className="flex min-h-screen flex-col bg-ink-50">
+    <div className="flex min-h-screen flex-col bg-wedding-50">
       {/* ---------------------------------------------------------------- */}
       {/* Barra superior: contadores rápidos                                */}
       {/* ---------------------------------------------------------------- */}
-      <header className="safe-top sticky top-0 z-20 border-b border-ink-100 bg-white">
+      <header className="safe-top sticky top-0 z-20 border-b border-wedding-100 bg-white">
         <div className="mx-auto flex max-w-lg items-center gap-3 px-4 py-3">
           <button
             type="button"
             onClick={() => navigate('/check-in')}
             aria-label="Voltar"
-            className="rounded-lg p-2 text-ink-500 transition-colors hover:bg-ink-100"
+            className="rounded-lg p-2 text-wedding-500 transition-colors hover:bg-wedding-100"
           >
             <ArrowLeft className="h-5 w-5" />
           </button>
 
           <div className="min-w-0 flex flex-1">
-            <p className="truncate text-sm font-semibold text-ink-900">
+            <p className="truncate text-sm font-semibold text-wedding-900">
               {event.hostsName ?? event.title}
             </p>
-            <p className="text-xs text-ink-400">{formatShortDate(event.eventDate)}</p>
+            <p className="text-xs text-wedding-400">{formatShortDate(event.eventDate)}</p>
           </div>
 
           <button
             type="button"
             onClick={() => setSearchOpen(true)}
             aria-label="Buscar convidado por nome"
-            className="rounded-lg p-2 text-ink-500 transition-colors hover:bg-ink-100"
+            className="rounded-lg p-2 text-wedding-500 transition-colors hover:bg-wedding-100"
           >
             <Search className="h-5 w-5" />
           </button>
@@ -186,7 +186,7 @@ export function CheckInScannerPage() {
 
         {/* Contadores em tempo real */}
         {stats && (
-          <div className="mx-auto grid max-w-lg grid-cols-3 divide-x divide-ink-100 border-t border-ink-100 text-center">
+          <div className="mx-auto grid max-w-lg grid-cols-3 divide-x divide-wedding-100 border-t border-wedding-100 text-center">
             <Counter label="Entradas" value={stats.entriesCount} />
             <Counter label="Pessoas" value={stats.peopleInside} />
             <Counter label="Esperados" value={stats.expectedPeople} />
@@ -203,8 +203,8 @@ export function CheckInScannerPage() {
             <div className="rounded-2xl bg-warning-100 p-3.5 text-warning-600">
               <WifiOff className="h-8 w-8" />
             </div>
-            <p className="text-base font-semibold text-ink-900">Sem conexão</p>
-            <p className="text-sm text-ink-500">
+            <p className="text-base font-semibold text-wedding-900">Sem conexão</p>
+            <p className="text-sm text-wedding-500">
               A validação do QR Code acontece no servidor e não pode ser feita offline. Reconecte
               para continuar os check-ins.
             </p>
@@ -212,9 +212,9 @@ export function CheckInScannerPage() {
         ) : (
           <>
             <div className="mb-3 flex items-center justify-between">
-              <p className="text-sm font-medium text-ink-700">Aponte a câmera para o QR Code</p>
+              <p className="text-sm font-medium text-wedding-700">Aponte a câmera para o QR Code</p>
               {validate.isPending && (
-                <span className="flex items-center gap-1.5 text-xs text-ink-400">
+                <span className="flex items-center gap-1.5 text-xs text-wedding-400">
                   <Clock className="h-3.5 w-3.5 animate-spin" />
                   Validando...
                 </span>
@@ -226,18 +226,18 @@ export function CheckInScannerPage() {
             {/* Últimas entradas */}
             {stats && stats.lastCheckIns.length > 0 && (
               <section className="mt-6">
-                <h2 className="mb-2 text-xs font-semibold uppercase tracking-wider text-ink-400">
+                <h2 className="mb-2 text-xs font-semibold uppercase tracking-wider text-wedding-400">
                   Últimas entradas
                 </h2>
                 <ul className="space-y-2">
                   {stats.lastCheckIns.slice(0, 4).map((entry) => (
                     <li
                       key={entry.id}
-                      className="flex items-center justify-between rounded-xl border-ink-100 bg-white px-4 py-3"
+                      className="flex items-center justify-between rounded-xl border-wedding-100 bg-white px-4 py-3"
                     >
                       <div className="min-w-0">
-                        <p className="truncate text-sm font-medium text-ink-800">{entry.guestName}</p>
-                        <p className="text-xs text-ink-400">
+                        <p className="truncate text-sm font-medium text-wedding-800">{entry.guestName}</p>
+                        <p className="text-xs text-wedding-400">
                           {entry.atLabel} · {entry.peopleCount}{' '}
                           {plural(entry.peopleCount, 'pessoa', 'pessoas')}
                           {entry.method === 'MANUAL' ? ' · manual' : ''}
@@ -517,8 +517,8 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
 function Counter({ label, value }: { label: string; value: number }) {
   return (
     <div className="px-2 py-2">
-      <p className="text-lg font-semibold tabular-nums text-ink-900">{value}</p>
-      <p className="text-[10px] uppercase tracking-wider text-ink-400">{label}</p>
+      <p className="text-lg font-semibold tabular-nums text-wedding-900">{value}</p>
+      <p className="text-[10px] uppercase tracking-wider text-wedding-400">{label}</p>
     </div>
   );
 }
@@ -592,7 +592,7 @@ function SearchGuestModal({
       <div className="space-y-4">
         <div className="relative">
           <Search
-            className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400"
+            className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-wedding-400"
             aria-hidden
           />
           <input
@@ -606,7 +606,7 @@ function SearchGuestModal({
         </div>
 
         {loading && (
-          <p className="flex items-center gap-2 py-3 text-sm text-ink-400">
+          <p className="flex items-center gap-2 py-3 text-sm text-wedding-400">
             <Clock className="h-3.5 w-3.5 animate-spin" />
             Buscando...
           </p>
@@ -614,8 +614,8 @@ function SearchGuestModal({
 
         {!loading && searched && results.length === 0 && (
           <div className="flex flex-col items-center gap-2 py-8 text-center">
-            <HelpCircle className="h-6 w-6 text-ink-300" />
-            <p className="text-sm text-ink-500">Nenhum convidado encontrado com esse nome.</p>
+            <HelpCircle className="h-6 w-6 text-wedding-300" />
+            <p className="text-sm text-wedding-500">Nenhum convidado encontrado com esse nome.</p>
           </div>
         )}
 
@@ -623,10 +623,10 @@ function SearchGuestModal({
           <ul className="max-h-72 space-y-2 overflow-y-auto">
             {results.map((guest) => (
               <li key={guest.id}>
-                <div className="flex items-center justify-between gap-3 rounded-xl border-ink-100 bg-white p-3.5">
+                <div className="flex items-center justify-between gap-3 rounded-xl border-wedding-100 bg-white p-3.5">
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-ink-900">{guest.name}</p>
-                    <p className="mt-0.5 text-xs text-ink-500">
+                    <p className="truncate text-sm font-medium text-wedding-900">{guest.name}</p>
+                    <p className="mt-0.5 text-xs text-wedding-500">
                       {statusLabel[guest.status] ?? guest.status}
                       {guest.attendingCount !== null
                         ? ` · ${guest.attendingCount} ${plural(guest.attendingCount, 'pessoa', 'pessoas')}`
@@ -639,7 +639,7 @@ function SearchGuestModal({
                       Entrada {formatTime(guest.checkedInAt)}
                     </span>
                   ) : (
-                    <span className="shrink-0 text-xs text-ink-400">Sem check-in</span>
+                    <span className="shrink-0 text-xs text-wedding-400">Sem check-in</span>
                   )}
                 </div>
               </li>
@@ -647,7 +647,7 @@ function SearchGuestModal({
           </ul>
         )}
 
-        <div className="flex items-start gap-2 rounded-xl border-ink-100 bg-ink-50 p-3.5 text-xs text-ink-500">
+        <div className="flex items-start gap-2 rounded-xl border-wedding-100 bg-wedding-50 p-3.5 text-xs text-wedding-500">
           <DoorOpen className="mt-0.5 h-3.5 w-3.5 shrink-0" />
           <span>
             A busca é apenas para localizar o convidado. A liberação da entrada continua sendo feita

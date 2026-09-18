@@ -37,8 +37,8 @@ export function EventsPage() {
     <div className="mx-auto max-w-6xl">
       <header className="mb-8 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-ink-900">Eventos</h1>
-          <p className="mt-1 text-sm text-ink-500">
+          <h1 className="text-3xl font-display font-semibold tracking-tight text-wedding-900">Eventos</h1>
+          <p className="mt-1 text-sm text-wedding-500">
             Crie e gerencie os eventos, convidados e convites.
           </p>
         </div>
@@ -51,7 +51,7 @@ export function EventsPage() {
       {/* Busca */}
       <div className="relative mb-5 max-w-md">
         <Search
-          className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400"
+          className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-wedding-400"
           aria-hidden
         />
         <input
@@ -110,19 +110,19 @@ export function EventsPage() {
               {filtered.map((event) => (
                 <tr key={event.id}>
                   <td>
-                    <p className="font-medium text-ink-900">{event.hostsName ?? event.title}</p>
-                    <p className="text-xs text-ink-400">{event.title}</p>
+                    <p className="font-medium text-wedding-900">{event.hostsName ?? event.title}</p>
+                    <p className="text-xs text-wedding-400">{event.title}</p>
                   </td>
                   <td className="whitespace-nowrap">
                     {formatShortDate(event.eventDate)}
-                    <span className="block text-xs text-ink-400">{event.startTime}</span>
+                    <span className="block text-xs text-wedding-400">{event.startTime}</span>
                   </td>
                   <td className="max-w-[220px] truncate">
                     {event.venue ? `${event.venue.name}, ${event.venue.city}` : '—'}
                   </td>
                   <td className="text-center tabular-nums">
                     <span className="inline-flex items-center gap-1.5">
-                      <Users className="h-3.5 w-3.5 text-ink-400" />
+                      <Users className="h-3.5 w-3.5 text-wedding-400" />
                       {event._count?.guests ?? 0}
                     </span>
                   </td>
@@ -130,7 +130,7 @@ export function EventsPage() {
                     <span className="font-medium text-success-600">
                       {event.invitationCounts?.confirmed ?? 0}
                     </span>
-                    <span className="text-ink-400">
+                    <span className="text-wedding-400">
                       {' / '}
                       {event.invitationCounts?.total ?? 0}
                     </span>
@@ -251,7 +251,7 @@ function CreateEventModal({ open, onClose }: { open: boolean; onClose: () => voi
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
         {/* Identificação */}
         <fieldset className="space-y-4">
-          <legend className="text-xs font-semibold uppercase tracking-wider text-ink-400">
+          <legend className="text-xs font-semibold uppercase tracking-wider text-wedding-400">
             Identificação
           </legend>
 
@@ -277,8 +277,8 @@ function CreateEventModal({ open, onClose }: { open: boolean; onClose: () => voi
         </fieldset>
 
         {/* Data e hora */}
-        <fieldset className="space-y-4 border-t border-ink-100 pt-5">
-          <legend className="text-xs font-semibold uppercase tracking-wider text-ink-400">
+        <fieldset className="space-y-4 border-t border-wedding-100 pt-5">
+          <legend className="text-xs font-semibold uppercase tracking-wider text-wedding-400">
             Data e horário
           </legend>
 
@@ -310,8 +310,8 @@ function CreateEventModal({ open, onClose }: { open: boolean; onClose: () => voi
         </fieldset>
 
         {/* Convite */}
-        <fieldset className="space-y-4 border-t border-ink-100 pt-5">
-          <legend className="text-xs font-semibold uppercase tracking-wider text-ink-400">
+        <fieldset className="space-y-4 border-t border-wedding-100 pt-5">
+          <legend className="text-xs font-semibold uppercase tracking-wider text-wedding-400">
             Convite
           </legend>
 
@@ -346,8 +346,8 @@ function CreateEventModal({ open, onClose }: { open: boolean; onClose: () => voi
         </fieldset>
 
         {/* Configurações */}
-        <fieldset className="space-y-4 border-t border-ink-100 pt-5">
-          <legend className="text-xs font-semibold uppercase tracking-wider text-ink-400">
+        <fieldset className="space-y-4 border-t border-wedding-100 pt-5">
+          <legend className="text-xs font-semibold uppercase tracking-wider text-wedding-400">
             Configurações
           </legend>
 
@@ -356,10 +356,10 @@ function CreateEventModal({ open, onClose }: { open: boolean; onClose: () => voi
             <option value="PUBLISHED">Publicado</option>
           </Select>
 
-          <label className="flex cursor-pointer items-start gap-2.5 text-sm text-ink-700">
+          <label className="flex cursor-pointer items-start gap-2.5 text-sm text-wedding-700">
             <input
               type="checkbox"
-              className="mt-0.5 h-4 w-4 rounded border-ink-300 text-ink-900"
+              className="mt-0.5 h-4 w-4 rounded border-wedding-300 text-wedding-900"
               {...register('allowCompanions')}
             />
             <span>Permitir que o convidado informe acompanhantes (até o limite autorizado)</span>

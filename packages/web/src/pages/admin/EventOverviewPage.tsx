@@ -62,7 +62,7 @@ export function EventOverviewPage() {
       <header className="mb-8">
         <Link
           to="/dashboard"
-          className="mb-4 inline-flex items-center gap-1.5 text-sm text-ink-500 transition-colors hover:text-ink-800"
+          className="mb-4 inline-flex items-center gap-1.5 text-sm text-wedding-500 transition-colors hover:text-wedding-800"
         >
           <ArrowLeft className="h-4 w-4" />
           Dashboard
@@ -70,10 +70,10 @@ export function EventOverviewPage() {
 
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight text-ink-900">
+            <h1 className="text-3xl font-display font-semibold tracking-tight text-wedding-900">
               {event.hostsName ?? event.title}
             </h1>
-            <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-ink-500">
+            <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-wedding-500">
               <span className="flex items-center gap-1.5">
                 <CalendarHeart className="h-3.5 w-3.5" />
                 {formatLongDate(event.eventDate)} às {event.startTime}
@@ -104,7 +104,7 @@ export function EventOverviewPage() {
         </div>
 
         {/* Navegação do evento */}
-        <nav className="no-scrollbar mt-6 flex gap-1 overflow-x-auto border-b border-ink-100">
+        <nav className="no-scrollbar mt-6 flex gap-1 overflow-x-auto border-b border-wedding-100">
           <EventTab to={`/eventos/${id}`} label="Visão geral" active />
           <EventTab to={`/eventos/${id}/convidados`} label="Convidados" />
           <EventTab to={`/eventos/${id}/convites`} label="Convites" />
@@ -172,7 +172,7 @@ export function EventOverviewPage() {
 
           {/* Progresso */}
           <section className="mt-6 card p-6">
-            <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-ink-400">
+            <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-wedding-400">
               Progresso geral
             </h2>
 
@@ -212,8 +212,8 @@ function EventTab({ to, label, active = false }: { to: string; label: string; ac
     <Link
       to={to}
       className={`whitespace-nowrap border-b-2 px-3.5 py-2.5 text-sm font-medium transition-colors ${active
-          ? 'border-ink-900 text-ink-900'
-          : 'border-transparent text-ink-500 hover:border-ink-200 hover:text-ink-800'
+          ? 'border-wedding-900 text-wedding-900'
+          : 'border-transparent text-wedding-500 hover:border-wedding-200 hover:text-wedding-800'
         }`}
     >
       {label}
@@ -248,17 +248,17 @@ function CheckInTimelineChart({ data }: { data: Array<{ time: string; count: num
     <article className="card p-6">
       <header className="mb-5 flex items-start justify-between gap-3">
         <div>
-          <h2 className="flex items-center gap-2 text-sm font-semibold text-ink-800">
-            <Activity className="h-4 w-4 text-ink-400" />
+          <h2 className="flex items-center gap-2 text-sm font-semibold text-wedding-800">
+            <Activity className="h-4 w-4 text-wedding-400" />
             Entradas por horário
           </h2>
-          <p className="mt-0.5 text-xs text-ink-400">Check-ins agrupados a cada 30 minutos</p>
+          <p className="mt-0.5 text-xs text-wedding-400">Check-ins agrupados a cada 30 minutos</p>
         </div>
 
         {stats && (
           <div className="text-right">
-            <p className="text-lg font-semibold tabular-nums text-ink-900">{stats.total}</p>
-            <p className="text-[10px] uppercase tracking-wider text-ink-400">check-ins</p>
+            <p className="text-lg font-semibold tabular-nums text-wedding-900">{stats.total}</p>
+            <p className="text-[10px] uppercase tracking-wider text-wedding-400">check-ins</p>
           </div>
         )}
       </header>
@@ -281,17 +281,17 @@ function CheckInTimelineChart({ data }: { data: Array<{ time: string; count: num
                   title={`${point.time} — ${point.count} entradas`}
                 >
                   {hovered === point.time && (
-                    <div className="absolute -top-8 z-10 whitespace-nowrap rounded-lg bg-ink-900 px-2 py-1 text-[11px] text-white shadow-lg">
+                    <div className="absolute -top-8 z-10 whitespace-nowrap rounded-lg bg-wedding-900 px-2 py-1 text-[11px] text-white shadow-lg">
                       {point.time} · {point.count}
                     </div>
                   )}
 
-                  <span className="mb-1 text-[10px] tabular-nums text-ink-400">
+                  <span className="mb-1 text-[10px] tabular-nums text-wedding-400">
                     {point.count > 0 ? point.count : ''}
                   </span>
 
                   <div
-                    className={`w-full rounded-t-lg transition-all duration-500 ${isPeak ? 'bg-success-500' : 'bg-ink-300 group-hover:bg-ink-400'
+                    className={`w-full rounded-t-lg transition-all duration-500 ${isPeak ? 'bg-success-500' : 'bg-wedding-300 group-hover:bg-wedding-400'
                       }`}
                     style={{ height: `${Math.max(height, 3)}%` }}
                   />
@@ -305,7 +305,7 @@ function CheckInTimelineChart({ data }: { data: Array<{ time: string; count: num
             {data.map((point, index) => (
               <span
                 key={point.time}
-                className="flex flex-1 text-center text-[9px] tabular-nums text-ink-400"
+                className="flex flex-1 text-center text-[9px] tabular-nums text-wedding-400"
               >
                 {index % Math.ceil(data.length / 8) === 0 ? point.time : ''}
               </span>
@@ -313,9 +313,9 @@ function CheckInTimelineChart({ data }: { data: Array<{ time: string; count: num
           </div>
 
           {stats?.peak && (
-            <p className="mt-4 border-t border-ink-100 pt-3 text-xs text-ink-500">
+            <p className="mt-4 border-t border-wedding-100 pt-3 text-xs text-wedding-500">
               Pico de entradas às{' '}
-              <strong className="font-semibold text-ink-800">{stats.peak.time}</strong> com{' '}
+              <strong className="font-semibold text-wedding-800">{stats.peak.time}</strong> com{' '}
               {stats.peak.count} {stats.peak.count === 1 ? 'entrada' : 'entradas'} · média de{' '}
               {stats.average.toFixed(1)} por bloco
             </p>
@@ -355,11 +355,11 @@ function ResponsesTimelineChart({ data }: { data: Array<{ date: string; count: n
   return (
     <article className="card p-6">
       <header className="mb-5">
-        <h2 className="flex items-center gap-2 text-sm font-semibold text-ink-800">
-          <CalendarHeart className="h-4 w-4 text-ink-400" />
+        <h2 className="flex items-center gap-2 text-sm font-semibold text-wedding-800">
+          <CalendarHeart className="h-4 w-4 text-wedding-400" />
           Confirmações por dia
         </h2>
-        <p className="mt-0.5 text-xs text-ink-400">Últimos 14 dias com respostas</p>
+        <p className="mt-0.5 text-xs text-wedding-400">Últimos 14 dias com respostas</p>
       </header>
 
       {points.length < 2 ? (
@@ -408,9 +408,9 @@ function ResponsesTimelineChart({ data }: { data: Array<{ date: string; count: n
             </svg>
           </div>
 
-          <div className="mt-3 flex justify-between text-[10px] text-ink-400">
+          <div className="mt-3 flex justify-between text-[10px] text-wedding-400">
             <span>{formatShortDate(points[0]!.date)}</span>
-            <span className="font-medium text-ink-600">
+            <span className="font-medium text-wedding-600">
               Pico: {path.max} {path.max === 1 ? 'confirmação' : 'confirmações'}
             </span>
             <span>{formatShortDate(points[points.length - 1]!.date)}</span>
@@ -423,9 +423,9 @@ function ResponsesTimelineChart({ data }: { data: Array<{ date: string; count: n
 
 function EmptyChart({ message }: { message: string }) {
   return (
-    <div className="flex h-44 flex-col items-center justify-center gap-2 rounded-xl border-dashed border-ink-200 text-center">
-      <CalendarHeart className="h-6 w-6 text-ink-300" />
-      <p className="max-w-[220px] text-xs text-ink-400">{message}</p>
+    <div className="flex h-44 flex-col items-center justify-center gap-2 rounded-xl border-dashed border-wedding-200 text-center">
+      <CalendarHeart className="h-6 w-6 text-wedding-300" />
+      <p className="max-w-[220px] text-xs text-wedding-400">{message}</p>
     </div>
   );
 }

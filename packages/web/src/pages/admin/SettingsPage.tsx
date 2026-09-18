@@ -116,34 +116,34 @@ export function SettingsPage() {
       <header className="mb-8">
         <Link
           to={`/eventos/${id}`}
-          className="mb-4 inline-flex items-center gap-1.5 text-sm text-ink-500 transition-colors hover:text-ink-800"
+          className="mb-4 inline-flex items-center gap-1.5 text-sm text-wedding-500 transition-colors hover:text-wedding-800"
         >
           <ArrowLeft className="h-4 w-4" />
           {event.hostsName ?? event.title}
         </Link>
 
-        <h1 className="text-2xl font-semibold tracking-tight text-ink-900">Configurações</h1>
-        <p className="mt-1 text-sm text-ink-500">
+        <h1 className="text-3xl font-display font-semibold tracking-tight text-wedding-900">Configurações</h1>
+        <p className="mt-1 text-sm text-wedding-500">
           Tudo que aparece no convite do convidado é definido aqui.
         </p>
       </header>
 
       {/* Link público do convite */}
       <div className="card mb-6 p-5">
-        <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-ink-400">
+        <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-wedding-400">
           <Info className="h-3.5 w-3.5" />
           Convite do evento
         </p>
-        <p className="mt-2 text-sm text-ink-600">
+        <p className="mt-2 text-sm text-wedding-600">
           Cada convidado recebe um link exclusivo, gerado automaticamente. Os links individuais
-          ficam na aba <Link to={`/eventos/${id}/convites`} className="font-medium text-ink-900 underline">Convites</Link>.
+          ficam na aba <Link to={`/eventos/${id}/convites`} className="font-medium text-wedding-900 underline">Convites</Link>.
         </p>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="card space-y-6 p-6" noValidate>
         {/* Identificação */}
         <fieldset className="space-y-4">
-          <legend className="text-xs font-semibold uppercase tracking-wider text-ink-400">
+          <legend className="text-xs font-semibold uppercase tracking-wider text-wedding-400">
             Identificação
           </legend>
 
@@ -167,8 +167,8 @@ export function SettingsPage() {
         </fieldset>
 
         {/* Data e hora */}
-        <fieldset className="space-y-4 border-t border-ink-100 pt-5">
-          <legend className="text-xs font-semibold uppercase tracking-wider text-ink-400">
+        <fieldset className="space-y-4 border-t border-wedding-100 pt-5">
+          <legend className="text-xs font-semibold uppercase tracking-wider text-wedding-400">
             Data e horário
           </legend>
 
@@ -199,8 +199,8 @@ export function SettingsPage() {
         </fieldset>
 
         {/* Visual do convite */}
-        <fieldset className="space-y-4 border-t border-ink-100 pt-5">
-          <legend className="text-xs font-semibold uppercase tracking-wider text-ink-400">
+        <fieldset className="space-y-4 border-t border-wedding-100 pt-5">
+          <legend className="text-xs font-semibold uppercase tracking-wider text-wedding-400">
             Visual do convite
           </legend>
 
@@ -214,7 +214,7 @@ export function SettingsPage() {
           />
 
           {event.coverImageUrl && (
-            <div className="overflow-hidden rounded-xl border-ink-100">
+            <div className="overflow-hidden rounded-xl border-wedding-100">
               <img
                 src={event.coverImageUrl}
                 alt="Prévia da capa"
@@ -225,8 +225,8 @@ export function SettingsPage() {
         </fieldset>
 
         {/* Mensagens */}
-        <fieldset className="space-y-4 border-t border-ink-100 pt-5">
-          <legend className="text-xs font-semibold uppercase tracking-wider text-ink-400">
+        <fieldset className="space-y-4 border-t border-wedding-100 pt-5">
+          <legend className="text-xs font-semibold uppercase tracking-wider text-wedding-400">
             Mensagens
           </legend>
 
@@ -253,8 +253,8 @@ export function SettingsPage() {
         </fieldset>
 
         {/* Informações do evento */}
-        <fieldset className="space-y-4 border-t border-ink-100 pt-5">
-          <legend className="text-xs font-semibold uppercase tracking-wider text-ink-400">
+        <fieldset className="space-y-4 border-t border-wedding-100 pt-5">
+          <legend className="text-xs font-semibold uppercase tracking-wider text-wedding-400">
             Informações para os convidados
           </legend>
 
@@ -278,8 +278,8 @@ export function SettingsPage() {
         </fieldset>
 
         {/* Lista de presentes */}
-        <fieldset className="space-y-4 border-t border-ink-100 pt-5">
-          <legend className="text-xs font-semibold uppercase tracking-wider text-ink-400">
+        <fieldset className="space-y-4 border-t border-wedding-100 pt-5">
+          <legend className="text-xs font-semibold uppercase tracking-wider text-wedding-400">
             Lista de presentes
           </legend>
 
@@ -299,8 +299,8 @@ export function SettingsPage() {
         </fieldset>
 
         {/* Regras */}
-        <fieldset className="space-y-4 border-t border-ink-100 pt-5">
-          <legend className="text-xs font-semibold uppercase tracking-wider text-ink-400">
+        <fieldset className="space-y-4 border-t border-wedding-100 pt-5">
+          <legend className="text-xs font-semibold uppercase tracking-wider text-wedding-400">
             Regras e status
           </legend>
 
@@ -311,26 +311,26 @@ export function SettingsPage() {
             <option value="CANCELLED">Cancelado</option>
           </Select>
 
-          <label className="flex cursor-pointer items-start gap-2.5 text-sm text-ink-700">
+          <label className="flex cursor-pointer items-start gap-2.5 text-sm text-wedding-700">
             <input
               type="checkbox"
-              className="mt-0.5 h-4 w-4 rounded border-ink-300 text-ink-900"
+              className="mt-0.5 h-4 w-4 rounded border-wedding-300 text-wedding-900"
               {...register('allowCompanions')}
             />
             <span>Permitir que o convidado informe acompanhantes (respeitando o limite autorizado)</span>
           </label>
 
-          <label className="flex cursor-pointer items-start gap-2.5 text-sm text-ink-700">
+          <label className="flex cursor-pointer items-start gap-2.5 text-sm text-wedding-700">
             <input
               type="checkbox"
-              className="mt-0.5 h-4 w-4 rounded border-ink-300 text-ink-900"
+              className="mt-0.5 h-4 w-4 rounded border-wedding-300 text-wedding-900"
               {...register('allowShareInvite')}
             />
             <span>Permitir que o convidado compartilhe o próprio convite</span>
           </label>
         </fieldset>
 
-        <div className="flex-wrap items-center justify-end gap-3 border-t border-ink-100 pt-5">
+        <div className="flex-wrap items-center justify-end gap-3 border-t border-wedding-100 pt-5">
           {savedAt && !isDirty && (
             <p className="mr-auto text-xs text-success-600">Salvo às {new Date(savedAt).toLocaleTimeString('pt-BR')}</p>
           )}
@@ -348,7 +348,7 @@ export function SettingsPage() {
         </div>
       </form>
 
-      <p className="mt-4 flex items-center gap-2 text-xs text-ink-400">
+      <p className="mt-4 flex items-center gap-2 text-xs text-wedding-400">
         <ExternalLink className="h-3.5 w-3.5" />
         As alterações passam a valer imediatamente para todos os convidados que abrirem o convite.
       </p>

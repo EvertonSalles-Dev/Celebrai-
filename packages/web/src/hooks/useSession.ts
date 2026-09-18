@@ -21,9 +21,9 @@ export function useSession() {
   });
 
   return {
-    user: query.data ?? null,
+    user: hasToken ? (query.data ?? null) : null,
     isLoading: hasToken && query.isLoading,
-    isAuthenticated: Boolean(query.data),
+    isAuthenticated: hasToken && Boolean(query.data),
     refetch: query.refetch,
   };
 }

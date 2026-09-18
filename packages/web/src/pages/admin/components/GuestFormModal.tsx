@@ -153,8 +153,8 @@ export function GuestFormModal({
 
           <div>
             <p className="label">Link do convite</p>
-            <div className="rounded-xl border-ink-200 bg-ink-50 p-3.5">
-              <p className="break-all font-mono text-xs text-ink-700">{createdLink}</p>
+            <div className="rounded-xl border-wedding-200 bg-wedding-50 p-3.5">
+              <p className="break-all font-mono text-xs text-wedding-700">{createdLink}</p>
             </div>
             <p className="helper">
               Este link é pessoal e intransferível. Envie apenas para o convidado.

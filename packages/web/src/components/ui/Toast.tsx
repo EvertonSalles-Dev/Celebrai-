@@ -47,7 +47,7 @@ const VARIANT_STYLE: Record<ToastVariant, { wrapper: string; Icon: typeof Info }
   success: { wrapper: 'border-success-500/30 bg-success-50 text-success-700', Icon: CheckCircle2 },
   error: { wrapper: 'border-danger-500/30 bg-danger-50 text-danger-700', Icon: XCircle },
   warning: { wrapper: 'border-warning-500/30 bg-warning-50 text-warning-700', Icon: AlertTriangle },
-  info: { wrapper: 'border-ink-200 bg-white text-ink-700', Icon: Info },
+  info: { wrapper: 'border-wedding-200 bg-white text-wedding-700', Icon: Info },
 };
 
 const AUTO_DISMISS_MS = 4500;

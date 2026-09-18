@@ -188,8 +188,8 @@ export function InvitationsPage() {
     <div className="mx-auto max-w-7xl">
       <header className="mb-6 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-ink-900">Convites</h1>
-          <p className="mt-1 text-sm text-ink-500">
+          <h1 className="text-3xl font-display font-semibold tracking-tight text-wedding-900">Convites</h1>
+          <p className="mt-1 text-sm text-wedding-500">
             {list.length} {plural(list.length, 'convite', 'convites')} · envie e acompanhe as
             respostas
           </p>
@@ -236,8 +236,8 @@ export function InvitationsPage() {
             }}
             className={`whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition-colors ${
               statusFilter === value
-                ? 'bg-ink-900 text-white'
-                : 'bg-white text-ink-600 hover:bg-ink-100'
+                ? 'bg-wedding-900 text-white'
+                : 'bg-white text-wedding-600 hover:bg-wedding-100'
             }`}
           >
             {label}
@@ -271,7 +271,7 @@ export function InvitationsPage() {
                       checked={allSelected}
                       onChange={toggleAll}
                       aria-label="Selecionar todos"
-                      className="h-4 w-4 rounded border-ink-300 text-ink-900"
+                      className="h-4 w-4 rounded border-wedding-300 text-wedding-900"
                     />
                   </th>
                 )}
@@ -293,21 +293,21 @@ export function InvitationsPage() {
                         checked={selected.has(invitation.id)}
                         onChange={() => toggleSelection(invitation.id)}
                         aria-label={`Selecionar ${invitation.guest.fullName}`}
-                        className="h-4 w-4 rounded border-ink-300 text-ink-900"
+                        className="h-4 w-4 rounded border-wedding-300 text-wedding-900"
                         disabled={invitation.status === 'CANCELLED'}
                       />
                     </td>
                   )}
 
                   <td>
-                    <p className="font-medium text-ink-900">{invitation.guest.fullName}</p>
-                    <p className="text-xs text-ink-400">
+                    <p className="font-medium text-wedding-900">{invitation.guest.fullName}</p>
+                    <p className="text-xs text-wedding-400">
                       {invitation.guest.whatsapp ?? invitation.guest.email ?? 'sem contato'}
                     </p>
                   </td>
 
                   <td className="text-center tabular-nums">
-                    <span className="text-ink-500">
+                    <span className="text-wedding-500">
                       {invitation.response?.attendingCount ?? '—'} / {invitation.guest.allowedCompanions}
                     </span>
                   </td>
@@ -316,20 +316,20 @@ export function InvitationsPage() {
                     <StatusBadge status={invitation.status} />
                   </td>
 
-                  <td className="text-xs text-ink-500">
+                  <td className="text-xs text-wedding-500">
                     {invitation.sentAt ? (
                       <>
                         {invitation.sentVia ?? 'enviado'}
-                        <span className="block text-ink-400">
+                        <span className="block text-wedding-400">
                           {formatDateTime(invitation.sentAt)}
                         </span>
                       </>
                     ) : (
-                      <span className="text-ink-300">não enviado</span>
+                      <span className="text-wedding-300">não enviado</span>
                     )}
                   </td>
 
-                  <td className="text-xs text-ink-500">
+                  <td className="text-xs text-wedding-500">
                     {invitation.respondedAt ? formatDateTime(invitation.respondedAt) : '—'}
                   </td>
 
@@ -443,10 +443,10 @@ export function InvitationsPage() {
               {sendResult.results.map((result) => (
                 <li
                   key={result.invitationId}
-                  className="flex items-center justify-between gap-3 rounded-xl border-ink-100 bg-white p-3"
+                  className="flex items-center justify-between gap-3 rounded-xl border-wedding-100 bg-white p-3"
                 >
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-ink-800">{result.guestName}</p>
+                    <p className="truncate text-sm font-medium text-wedding-800">{result.guestName}</p>
                     {result.error && <p className="text-xs text-warning-600">{result.error}</p>}
                   </div>
 
@@ -458,7 +458,7 @@ export function InvitationsPage() {
                           await navigator.clipboard.writeText(result.link);
                           toast.success('Link copiado!');
                         }}
-                        className="rounded-lg p-1.5 text-ink-400 hover:bg-ink-100 hover:text-ink-700"
+                        className="rounded-lg p-1.5 text-wedding-400 hover:bg-wedding-100 hover:text-wedding-700"
                         title="Copiar link"
                       >
                         <Link2 className="h-3.5 w-3.5" />
@@ -500,8 +500,8 @@ export function InvitationsPage() {
                 key={option.value}
                 className={`flex cursor-pointer items-start gap-3 rounded-xl border p-4 transition-colors ${
                   channel === option.value
-                    ? 'border-ink-900 bg-ink-50'
-                    : 'border-ink-200 hover:bg-ink-50'
+                    ? 'border-wedding-900 bg-wedding-50'
+                    : 'border-wedding-200 hover:bg-wedding-50'
                 }`}
               >
                 <input
@@ -510,16 +510,16 @@ export function InvitationsPage() {
                   value={option.value}
                   checked={channel === option.value}
                   onChange={() => setChannel(option.value)}
-                  className="mt-0.5 h-4 w-4 border-ink-300 text-ink-900"
+                  className="mt-0.5 h-4 w-4 border-wedding-300 text-wedding-900"
                 />
                 <div>
-                  <p className="text-sm font-medium text-ink-900">{option.label}</p>
-                  <p className="mt-0.5 text-xs text-ink-500">{option.description}</p>
+                  <p className="text-sm font-medium text-wedding-900">{option.label}</p>
+                  <p className="mt-0.5 text-xs text-wedding-500">{option.description}</p>
                 </div>
               </label>
             ))}
 
-            <p className="rounded-xl bg-ink-50 p-3.5 text-xs leading-relaxed text-ink-500">
+            <p className="rounded-xl bg-wedding-50 p-3.5 text-xs leading-relaxed text-wedding-500">
               Cada envio gera um novo link individual: o link anterior deixa de funcionar, garantindo
               que apenas o convidado tenha acesso ao próprio convite.
             </p>
@@ -562,10 +562,10 @@ export function InvitationsPage() {
               showActions
             />
 
-            <dl className="space-y-2 rounded-xl border-ink-100 bg-ink-50 p-4 text-sm">
+            <dl className="space-y-2 rounded-xl border-wedding-100 bg-wedding-50 p-4 text-sm">
               <div className="flex justify-between">
-                <dt className="text-ink-500">Autorizados</dt>
-                <dd className="font-medium text-ink-800">
+                <dt className="text-wedding-500">Autorizados</dt>
+                <dd className="font-medium text-wedding-800">
                   {qrData.guest.allowedCompanions}{' '}
                   {plural(qrData.guest.allowedCompanions, 'pessoa', 'pessoas')}
                 </dd>
@@ -573,8 +573,8 @@ export function InvitationsPage() {
 
               {qrData.guest.attendingCount !== null && (
                 <div className="flex justify-between">
-                  <dt className="text-ink-500">Confirmados</dt>
-                  <dd className="font-medium text-ink-800">
+                  <dt className="text-wedding-500">Confirmados</dt>
+                  <dd className="font-medium text-wedding-800">
                     {qrData.guest.attendingCount}{' '}
                     {plural(qrData.guest.attendingCount, 'pessoa', 'pessoas')}
                   </dd>
@@ -583,13 +583,13 @@ export function InvitationsPage() {
 
               {qrData.alreadyCheckedIn && (
                 <div className="flex justify-between">
-                  <dt className="text-ink-500">Check-in</dt>
+                  <dt className="text-wedding-500">Check-in</dt>
                   <dd className="font-medium text-blue-700">Já realizado</dd>
                 </div>
               )}
             </dl>
 
-            <p className="text-xs leading-relaxed text-ink-400">
+            <p className="text-xs leading-relaxed text-wedding-400">
               O QR Code contém apenas um identificador seguro — nenhum dado pessoal como CPF é
               gravado nele.
             </p>
@@ -643,8 +643,8 @@ export function InvitationsPage() {
               <span>Link exclusivo copiado. O link anterior deste convidado foi invalidado.</span>
             </div>
 
-            <div className="rounded-xl border-ink-200 bg-ink-50 p-3.5">
-              <p className="break-all font-mono text-xs text-ink-700">{shareTarget.link}</p>
+            <div className="rounded-xl border-wedding-200 bg-wedding-50 p-3.5">
+              <p className="break-all font-mono text-xs text-wedding-700">{shareTarget.link}</p>
             </div>
 
             <Button
@@ -684,8 +684,8 @@ function RowAction({
       onClick={onClick}
       className={`rounded-lg p-1.5 transition-colors ${
         danger
-          ? 'text-ink-400 hover:bg-danger-50 hover:text-danger-600'
-          : 'text-ink-400 hover:bg-ink-100 hover:text-ink-700'
+          ? 'text-wedding-400 hover:bg-danger-50 hover:text-danger-600'
+          : 'text-wedding-400 hover:bg-wedding-100 hover:text-wedding-700'
       }`}
     >
       {icon}
@@ -709,9 +709,9 @@ function ResultBox({
   }[tone];
 
   return (
-    <div className="rounded-xl border-ink-100 bg-white p-3 text-center">
+    <div className="rounded-xl border-wedding-100 bg-white p-3 text-center">
       <p className={`text-xl font-semibold tabular-nums ${toneClass}`}>{value}</p>
-      <p className="text-[10px] uppercase tracking-wider text-ink-400">{label}</p>
+      <p className="text-[10px] uppercase tracking-wider text-wedding-400">{label}</p>
     </div>
   );
 }

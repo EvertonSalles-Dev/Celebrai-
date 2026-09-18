@@ -10,6 +10,7 @@ import {
   Users,
   X,
 } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useSession } from '@/hooks/useSession';
 import { useOnlineStatus } from '@/hooks/useOnlineStatus';
 import { authApi } from '@/services/api';
@@ -29,6 +30,7 @@ import { WifiOff } from 'lucide-react';
  */
 export function AdminLayout() {
   const { user } = useSession();
+  const queryClient = useQueryClient();
   const navigate = useNavigate();
   const location = useLocation();
   const isOnline = useOnlineStatus();
@@ -42,8 +44,9 @@ export function AdminLayout() {
   const isReceptionist = user?.role === 'RECEPTIONIST';
 
   const handleLogout = async () => {
-    await authApi.logout();
+    queryClient.clear();
     navigate('/login', { replace: true });
+    await authApi.logout();
   };
 
   const navItems = isReceptionist
@@ -68,45 +71,45 @@ export function AdminLayout() {
     <div className="flex h-full flex-col">
       {/* Marca */}
       <div className="flex items-center gap-2.5 px-5 py-5">
-        <div className="rounded-xl bg-ink-900 p-2 text-white">
+        <div className="rounded-xl bg-wedding-800 p-2 text-white shadow-soft">
           <Heart className="h-4 w-4" fill="currentColor" />
         </div>
         <div>
-          <p className="text-sm font-semibold tracking-tight text-ink-900">Celebrai</p>
-          <p className="text-[11px] text-ink-400">Gestão de convidados</p>
+          <p className="text-xl font-display font-semibold tracking-tight text-wedding-900">Celebrai</p>
+          <p className="text-[11px] font-medium text-wedding-600">Gestão de convidados</p>
         </div>
       </div>
 
       {/* Navegação */}
-      <nav className="flex flex-1 space-y-1 px-3">
+      <nav className="flex flex-1 flex-col space-y-1 px-3 py-2">
         {navItems.map((item) => (
           <NavLink
             key={item.to}
             to={item.to}
             className={({ isActive }) =>
               cn(
-                'flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium transition-colors',
+                'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-150',
                 isActive
-                  ? 'bg-ink-900 text-white'
-                  : 'text-ink-600 hover:bg-ink-100 hover:text-ink-900',
+                  ? 'bg-wedding-800 text-white shadow-sm'
+                  : 'text-wedding-700 hover:bg-wedding-100/70 hover:text-wedding-900',
               )
             }
           >
-            <item.icon className="h-4 w-4 shrink-0" />
-            {item.label}
+            <item.icon className="h-4 w-4 shrink-0 opacity-80" />
+            <span>{item.label}</span>
           </NavLink>
         ))}
       </nav>
 
       {/* Rodapé: usuário + sair */}
-      <div className="border-t border-ink-100 p-3">
+      <div className="border-t border-wedding-200 p-3">
         <div className="mb-2 flex items-center gap-3 rounded-xl px-2 py-2">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-ink-900 text-xs font-semibold text-white">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-wedding-800 text-xs font-semibold text-white">
             {initials(user?.name ?? '?')}
           </div>
           <div className="min-w-0">
-            <p className="truncate text-sm font-medium text-ink-800">{user?.name}</p>
-            <p className="truncate text-[11px] text-ink-400">{roleLabel}</p>
+            <p className="truncate text-sm font-medium text-wedding-900">{user?.name}</p>
+            <p className="truncate text-[11px] text-wedding-600">{roleLabel}</p>
           </div>
         </div>
         <Button
@@ -124,16 +127,16 @@ export function AdminLayout() {
   );
 
   return (
-    <div className="flex min-h-screen bg-ink-50">
+    <div className="flex min-h-screen bg-wedding-50">
       {/* Sidebar desktop */}
-      <aside className="fixed inset-y-0 left-0 hidden w-64 border-r border-ink-100 bg-white lg:block">
+      <aside className="fixed inset-y-0 left-0 hidden w-64 border-r border-wedding-200 bg-white lg:block">
         {sidebar}
       </aside>
 
       {/* Gaveta mobile */}
       {mobileOpen && (
         <div
-          className="fixed inset-0 z-40 bg-ink-950/50 lg:hidden"
+          className="fixed inset-0 z-40 bg-wedding-950/50 lg:hidden"
           onClick={() => setMobileOpen(false)}
           role="presentation"
         >
@@ -146,7 +149,7 @@ export function AdminLayout() {
                 type="button"
                 onClick={() => setMobileOpen(false)}
                 aria-label="Fechar menu"
-                className="rounded-lg p-2 text-ink-400 hover:bg-ink-100"
+                className="rounded-lg p-2 text-wedding-500 hover:bg-wedding-100"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -159,25 +162,25 @@ export function AdminLayout() {
       {/* Conteúdo */}
       <div className="flex min-w-0 flex-1 flex-col lg:pl-64">
         {/* Barra superior */}
-        <header className="safe-top sticky top-0 z-30 flex items-center gap-3 border-b border-ink-100 bg-white/90 px-4 py-3 backdrop-blur:px-8">
+        <header className="safe-top sticky top-0 z-30 flex items-center gap-3 border-b border-wedding-200 bg-white/80 px-4 py-3 backdrop-blur lg:px-8">
           <button
             type="button"
             onClick={() => setMobileOpen(true)}
             aria-label="Abrir menu"
-            className="rounded-lg p-2 text-ink-600 hover:bg-ink-100 lg:hidden"
+            className="rounded-lg p-2 text-wedding-700 hover:bg-wedding-100 lg:hidden"
           >
             <Menu className="h-5 w-5" />
           </button>
 
           <Link to="/dashboard" className="flex items-center gap-2 lg:hidden">
-            <Heart className="h-5 w-5 text-ink-900" fill="currentColor" />
-            <span className="text-sm font-semibold text-ink-900">Celebrai</span>
+            <Heart className="h-5 w-5 text-wedding-800" fill="currentColor" />
+            <span className="text-xl font-display font-semibold text-wedding-900">Celebrai</span>
           </Link>
 
           <div className="ml-auto flex items-center gap-2">
             <Link
               to="/check-in"
-              className="hidden items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-ink-600 transition-colors hover:bg-ink-100 hover:text-ink-900 sm:flex"
+              className="hidden items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-wedding-700 transition-colors hover:bg-wedding-100 hover:text-wedding-900 sm:flex"
             >
               <QrCode className="h-4 w-4" />
               Controle de entrada

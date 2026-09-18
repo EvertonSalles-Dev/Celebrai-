@@ -146,7 +146,7 @@ export function QrScanner({
   return (
     <div className={cn('space-y-4', className)}>
       {/* Área da câmera */}
-      <div className="relative overflow-hidden rounded-3xl bg-ink-950">
+      <div className="relative overflow-hidden rounded-3xl bg-wedding-950">
         <div
           id={containerId.current}
           className={cn(
@@ -157,16 +157,16 @@ export function QrScanner({
         />
 
         {status !== 'running' && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-ink-950/95 p-6 text-center text-white">
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-wedding-950/95 p-6 text-center text-white">
             {status === 'starting' ? (
               <>
-                <Camera className="h-9 w-9 animate-pulse text-ink-300" aria-hidden />
-                <p className="text-sm text-ink-300">Iniciando a câmera...</p>
+                <Camera className="h-9 w-9 animate-pulse text-wedding-300" aria-hidden />
+                <p className="text-sm text-wedding-300">Iniciando a câmera...</p>
               </>
             ) : (
               <>
                 <CameraOff className="h-9 w-9 text-danger-400" aria-hidden />
-                <p className="max-w-sm text-sm text-ink-200">{errorMessage}</p>
+                <p className="max-w-sm text-sm text-wedding-200">{errorMessage}</p>
                 <Button
                   variant="secondary"
                   size="sm"
@@ -192,7 +192,7 @@ export function QrScanner({
         <button
           type="button"
           onClick={() => setShowManual((value) => !value)}
-          className="inline-flex items-center gap-1.5 text-sm text-ink-500 transition-colors hover:text-ink-800"
+          className="inline-flex items-center gap-1.5 text-sm text-wedding-500 transition-colors hover:text-wedding-800"
         >
           {showManual ? <QrCode className="h-4 w-4" /> : <Keyboard className="h-4 w-4" />}
           {showManual ? 'Usar a câmera' : 'Digitar o código manualmente'}

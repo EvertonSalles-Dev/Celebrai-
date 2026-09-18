@@ -15,7 +15,7 @@
   }
 
   body {
-    @apply bg-ink-50 font-sans text-ink-900 antialiased;
+    @apply bg-wedding-50 font-sans text-wedding-900 antialiased;
   }
 
   /* Foco visível e acessível em todos os elementos interativos. */
@@ -40,16 +40,16 @@
   }
 
   .btn-primary {
-    @apply btn bg-ink-900 text-white shadow-soft hover:bg-ink-800 active:scale-[0.98];
+    @apply btn bg-wedding-800 text-white shadow-soft hover:bg-wedding-900 active:scale-[0.98];
   }
 
   .btn-secondary {
-    @apply btn border-ink-200 bg-white text-ink-700 shadow-soft
-           hover:border-ink-300 hover:bg-ink-50 active:scale-[0.98];
+    @apply btn border-wedding-200 bg-white text-wedding-800 shadow-soft
+           hover:border-wedding-300 hover:bg-wedding-50 active:scale-[0.98];
   }
 
   .btn-ghost {
-    @apply btn text-ink-600 hover:bg-ink-100 hover:text-ink-900;
+    @apply btn text-wedding-700 hover:bg-wedding-100 hover:text-wedding-900;
   }
 
   .btn-danger {
@@ -85,7 +85,7 @@
   /* Cards                                                             */
   /* ---------------------------------------------------------------- */
   .card {
-    @apply rounded-2xl border-ink-100 bg-white shadow-soft;
+    @apply rounded-2xl border-wedding-100 bg-white shadow-soft;
   }
 
   .card-invite {
@@ -96,14 +96,14 @@
   /* Formulários                                                       */
   /* ---------------------------------------------------------------- */
   .label {
-    @apply mb-1.5 block text-sm font-medium text-ink-700;
+    @apply mb-1.5 block text-sm font-medium text-wedding-800;
   }
 
   .input {
-    @apply w-full rounded-xl border-ink-200 bg-white px-3.5 py-2.5 text-sm text-ink-900
-           placeholder:text-ink-400 transition-colors
-           focus:border-ink-900 focus:outline-none focus:ring-2 focus:ring-ink-900/10
-           disabled:cursor-not-allowed disabled:bg-ink-50 disabled:text-ink-400;
+    @apply w-full rounded-xl border-wedding-200 bg-white px-3.5 py-2.5 text-sm text-wedding-900
+           placeholder:text-wedding-400 transition-colors
+           focus:border-gold-500 focus:outline-none focus:ring-2 focus:ring-gold-500/20
+           disabled:cursor-not-allowed disabled:bg-wedding-50 disabled:text-wedding-400;
   }
 
   .input-error {
@@ -121,7 +121,7 @@
   }
 
   .helper {
-    @apply mt-1.5 text-xs text-ink-500;
+    @apply mt-1.5 text-xs text-wedding-500;
   }
 
   /* ---------------------------------------------------------------- */
@@ -156,7 +156,7 @@
   /* Tabela                                                            */
   /* ---------------------------------------------------------------- */
   .table-wrapper {
-    @apply w-full overflow-x-auto rounded-2xl border-ink-100 bg-white;
+    @apply w-full overflow-x-auto rounded-2xl border-wedding-100 bg-white;
   }
 
   .table {
@@ -164,12 +164,12 @@
   }
 
   .table thead th {
-    @apply whitespace-nowrap border-b border-ink-100 bg-ink-50/60 px-4 py-3
-           text-xs font-semibold uppercase tracking-wider text-ink-500;
+    @apply whitespace-nowrap border-b border-wedding-200 bg-wedding-50 px-4 py-3
+           text-xs font-semibold uppercase tracking-wider text-wedding-700;
   }
 
   .table tbody td {
-    @apply border-b border-ink-50 px-4 py-3 align-middle text-ink-700;
+    @apply border-b border-wedding-100 px-4 py-3 align-middle text-wedding-800;
   }
 
   .table tbody tr:last-child td {
@@ -177,7 +177,7 @@
   }
 
   .table tbody tr {
-    @apply transition-colors hover:bg-ink-50/60;
+    @apply transition-colors hover:bg-wedding-50/60;
   }
 
   /* ---------------------------------------------------------------- */
@@ -218,7 +218,7 @@
 
   /* Esqueleto de carregamento com brilho. */
   .skeleton {
-    @apply relative overflow-hidden rounded-lg bg-ink-100;
+    @apply relative overflow-hidden rounded-lg bg-wedding-100;
   }
 
   .skeleton::after {

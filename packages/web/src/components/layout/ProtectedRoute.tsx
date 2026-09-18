@@ -38,7 +38,7 @@ export function ProtectedRoute({
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-ink-50">
+      <div className="flex min-h-screen items-center justify-center bg-wedding-50">
         <LoadingState label="Verificando acesso..." />
       </div>
     );

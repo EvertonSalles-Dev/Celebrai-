@@ -68,7 +68,7 @@ export function EventStatusBadge({ status }: { status: string }) {
 /** Indicador de carregamento. */
 export function LoadingState({ label = 'Carregando...' }: { label?: string }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-3 py-16 text-ink-400">
+    <div className="flex flex-col items-center justify-center gap-3 py-16 text-wedding-400">
       <Loader2 className="h-7 w-7 animate-spin" aria-hidden />
       <p className="text-sm">{label}</p>
     </div>
@@ -89,12 +89,12 @@ export function EmptyState({
 }) {
   return (
     <div className="flex flex-col items-center justify-center gap-3 px-6 py-16 text-center">
-      <div className="rounded-2xl bg-ink-100 p-3.5 text-ink-400">
+      <div className="rounded-2xl bg-wedding-100 p-3.5 text-wedding-400">
         <Icon className="h-7 w-7" aria-hidden />
       </div>
       <div>
-        <p className="text-base font-semibold text-ink-800">{title}</p>
-        {description && <p className="mx-auto mt-1 max-w-md text-sm text-ink-500">{description}</p>}
+        <p className="text-base font-semibold text-wedding-800">{title}</p>
+        {description && <p className="mx-auto mt-1 max-w-md text-sm text-wedding-500">{description}</p>}
       </div>
       {action}
     </div>
@@ -117,8 +117,8 @@ export function ErrorState({
         <AlertCircle className="h-7 w-7" aria-hidden />
       </div>
       <div>
-        <p className="text-base font-semibold text-ink-800">{title}</p>
-        {description && <p className="mx-auto mt-1 max-w-md text-sm text-ink-500">{description}</p>}
+        <p className="text-base font-semibold text-wedding-800">{title}</p>
+        {description && <p className="mx-auto mt-1 max-w-md text-sm text-wedding-500">{description}</p>}
       </div>
       {onRetry && (
         <button type="button" className="btn-secondary" onClick={onRetry}>

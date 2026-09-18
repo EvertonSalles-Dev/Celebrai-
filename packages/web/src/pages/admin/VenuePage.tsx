@@ -107,14 +107,14 @@ export function VenuePage() {
       <header className="mb-8">
         <Link
           to={`/eventos/${id}`}
-          className="mb-4 inline-flex items-center gap-1.5 text-sm text-ink-500 transition-colors hover:text-ink-800"
+          className="mb-4 inline-flex items-center gap-1.5 text-sm text-wedding-500 transition-colors hover:text-wedding-800"
         >
           <ArrowLeft className="h-4 w-4" />
           {event.hostsName ?? event.title}
         </Link>
 
-        <h1 className="text-2xl font-semibold tracking-tight text-ink-900">Local do evento</h1>
-        <p className="mt-1 text-sm text-ink-500">
+        <h1 className="text-3xl font-display font-semibold tracking-tight text-wedding-900">Local do evento</h1>
+        <p className="mt-1 text-sm text-wedding-500">
           Estas informações aparecem no convite, com botões "Como chegar" e mapa.
         </p>
       </header>
@@ -123,18 +123,18 @@ export function VenuePage() {
         <div className="mb-6 grid gap-4 lg:grid-cols-2">
           {/* Prévia do endereço */}
           <div className="card p-5">
-            <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-ink-400">
+            <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-wedding-400">
               <MapPin className="h-3.5 w-3.5" />
               Prévia no convite
             </p>
 
-            <p className="mt-3 text-base font-semibold text-ink-900">
+            <p className="mt-3 text-base font-semibold text-wedding-900">
               {event.venue?.name || 'Nome do local'}
             </p>
-            <p className="mt-1 text-sm text-ink-600">{fullAddress || 'Endereço do evento'}</p>
+            <p className="mt-1 text-sm text-wedding-600">{fullAddress || 'Endereço do evento'}</p>
 
             {event.venue?.referencePoint && (
-              <p className="mt-2 text-xs italic text-ink-400">{event.venue.referencePoint}</p>
+              <p className="mt-2 text-xs italic text-wedding-400">{event.venue.referencePoint}</p>
             )}
 
             <div className="mt-4 flex-wrap gap-2">
@@ -175,8 +175,8 @@ export function VenuePage() {
               />
             ) : (
               <div className="flex h-full min-h-[220px] flex-col items-center justify-center gap-2 p-6 text-center">
-                <MapPin className="h-7 w-7 text-ink-300" />
-                <p className="text-sm text-ink-400">
+                <MapPin className="h-7 w-7 text-wedding-300" />
+                <p className="text-sm text-wedding-400">
                   Preencha as coordenadas para exibir o mapa incorporado
                 </p>
               </div>
@@ -188,7 +188,7 @@ export function VenuePage() {
       <form onSubmit={handleSubmit(onSubmit)} className="card space-y-6 p-6" noValidate>
         {/* Identificação do local */}
         <fieldset className="space-y-4">
-          <legend className="text-xs font-semibold uppercase tracking-wider text-ink-400">
+          <legend className="text-xs font-semibold uppercase tracking-wider text-wedding-400">
             Identificação
           </legend>
 
@@ -210,8 +210,8 @@ export function VenuePage() {
         </fieldset>
 
         {/* Endereço */}
-        <fieldset className="space-y-4 border-t border-ink-100 pt-5">
-          <legend className="text-xs font-semibold uppercase tracking-wider text-ink-400">
+        <fieldset className="space-y-4 border-t border-wedding-100 pt-5">
+          <legend className="text-xs font-semibold uppercase tracking-wider text-wedding-400">
             Endereço
           </legend>
 
@@ -270,8 +270,8 @@ export function VenuePage() {
         </fieldset>
 
         {/* Localização */}
-        <fieldset className="space-y-4 border-t border-ink-100 pt-5">
-          <legend className="text-xs font-semibold uppercase tracking-wider text-ink-400">
+        <fieldset className="space-y-4 border-t border-wedding-100 pt-5">
+          <legend className="text-xs font-semibold uppercase tracking-wider text-wedding-400">
             Como chegar
           </legend>
 
@@ -292,7 +292,7 @@ export function VenuePage() {
             />
           </div>
 
-          <p className="flex items-start gap-2 rounded-xl bg-ink-50 p-3.5 text-xs text-ink-500">
+          <p className="flex items-start gap-2 rounded-xl bg-wedding-50 p-3.5 text-xs text-wedding-500">
             <Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0" />
             Dica: abra o local no Google Maps, clique em "Compartilhar" e cole o link aqui. No Waze,
             use "Enviar local".
@@ -300,8 +300,8 @@ export function VenuePage() {
         </fieldset>
 
         {/* Informações extras */}
-        <fieldset className="space-y-4 border-t border-ink-100 pt-5">
-          <legend className="text-xs font-semibold uppercase tracking-wider text-ink-400">
+        <fieldset className="space-y-4 border-t border-wedding-100 pt-5">
+          <legend className="text-xs font-semibold uppercase tracking-wider text-wedding-400">
             Informações para os convidados
           </legend>
 
@@ -322,7 +322,7 @@ export function VenuePage() {
           />
         </fieldset>
 
-        <div className="flex justify-end gap-2 border-t border-ink-100 pt-5">
+        <div className="flex justify-end gap-2 border-t border-wedding-100 pt-5">
           <Link to={`/eventos/${id}`} className="btn-secondary">
             Cancelar
           </Link>
@@ -336,7 +336,7 @@ export function VenuePage() {
         </div>
       </form>
 
-      <p className="mt-4 flex items-center gap-2 text-xs text-ink-400">
+      <p className="mt-4 flex items-center gap-2 text-xs text-wedding-400">
         <Car className="h-3.5 w-3.5" />
         As informações de estacionamento e acesso aparecem na seção "Local do evento" do convite.
       </p>
