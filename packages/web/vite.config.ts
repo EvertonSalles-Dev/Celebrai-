@@ -31,7 +31,8 @@ export default defineConfig({
     host: true,
   },
   build: {
-    outDir: 'dist',
+    outDir: resolve(__dirname, '../../dist'),
+    emptyOutDir: true,
     sourcemap: false,
     chunkSizeWarningLimit: 900,
     rollupOptions: {
