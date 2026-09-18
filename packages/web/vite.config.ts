@@ -1,6 +1,9 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import { resolve } from 'node:path';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 /**
  * Configuração do Vite.
@@ -31,8 +34,7 @@ export default defineConfig({
     host: true,
   },
   build: {
-    outDir: resolve(__dirname, '../../dist'),
-    emptyOutDir: true,
+    outDir: 'dist',
     sourcemap: false,
     chunkSizeWarningLimit: 900,
     rollupOptions: {

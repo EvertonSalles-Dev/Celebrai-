@@ -10,7 +10,7 @@
     "dev": "npm-run-all --parallel dev:api dev:web",
     "dev:api": "npm run dev --workspace @celebrai/api",
     "dev:web": "npm run dev --workspace @celebrai/web",
-    "build": "npm run build --workspace @celebrai/api && npm run build --workspace @celebrai/web",
+    "build": "npm run build --workspace @celebrai/api && npm run build --workspace @celebrai/web && node -e \"require('fs').cpSync('packages/web/dist', 'dist', {recursive: true})\"",
     "build:local": "npm run build:local --workspace @celebrai/api",
     "build:web": "npm run build --workspace @celebrai/web",
     "db:bootstrap": "npm run bootstrap:db --workspace @celebrai/api",

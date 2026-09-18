@@ -7,7 +7,7 @@
   "main": "dist/server.js",
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "build": "prisma generate && tsc -p tsconfig.build.json",
+    "build": "tsc -p tsconfig.build.json",
     "build:local": "node scripts/build-local.mjs",
     "start": "node dist/server.js",
     "lint": "tsc --noEmit",
