@@ -173,6 +173,11 @@ if (provider === 'postgresql') {
 let schema = readFileSync(sourceSchema, 'utf8');
 
 // 1) Remove os blocos `enum` do SQLite e coleta os nomes para virar String.
+//
+// O comentário usa `//` e NÃO `///`. Em Prisma, `///` é doc-comment e precisa
+// estar imediatamente acima de um campo, bloco ou enum — um `///` solto, que é
+// o que sobra depois de remover o bloco `enum`, faz o schema inteiro ser
+// rejeitado com `This line is not a valid definition within a schema`.
 const enumNames = [];
 schema = schema.replace(/enum\s+(\w+)\s*\{[\s\S]*?\n\}/g, (_match, name) => {
   enumNames.push(name);
