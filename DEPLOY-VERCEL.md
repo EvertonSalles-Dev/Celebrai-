@@ -18,6 +18,47 @@ SQLite não funciona em produção por esse motivo.
 
 ---
 
+## Root Directory do projeto na Vercel
+**Deve ficar vazio (ou `.`)** — apontando para a raiz do repositório.
+
+Sintoma quando está errado (`packages/api`):
+
+```
+Error: Cannot find module '/vercel/path0/packages/api/scripts/build-vercel.mjs'
+Error: Command "node scripts/build-vercel.mjs" exited with 1
+```
+
+O caminho resolvido termina em `/packages/api/scripts/` porque o comando é
+executado **de dentro** de `packages/api`. Com isso, todas as declarações do
+`vercel.json` ficam deslocadas em um nível:
+
+| Declaração | Resolvido como | Existe? |
+|---|---|---|
+| `buildCommand` | `packages/api/scripts/build-vercel.mjs` | ❌ |
+| `outputDirectory: packages/web/dist` | `packages/api/packages/web/dist` | ❌ |
+| `functions: api/index.ts` | `packages/api/index.ts` | ❌ |
+
+É por isso que corrigir o `vercel.json` não tinha efeito: os arquivos estavam
+certos, mas sendo lidos a partir da raiz errada.
+
+### Defesa em profundidade
+O `scripts/build-vercel.mjs` **se auto-localiza** a partir do próprio caminho
+(`<raiz>/scripts/` → sobe um nível) e roda todos os comandos com esse `cwd`, em
+vez de assumir o diretório de trabalho. Assim ele funciona mesmo se o Root
+Directory estiver em `packages/api`, e registra um aviso explícito nesse caso.
+
+O `buildCommand` usa `npm run build:vercel --prefix ../..`: o `--prefix` faz o
+npm encontrar o `package.json` da raiz **antes** de executar o script, o que
+funciona independente do cwd. (Note que `--prefix ..` não serve — o npm o
+resolve como `packages/`, não como a raiz.)
+
+> ⚠️ `outputDirectory` e `functions` **não** têm como se defender sozinhos: eles
+> são resolvidos pela Vercel contra o Root Directory, antes de qualquer código
+> do projeto rodar. Corrigir o Root Directory no painel continua sendo
+> necessário.
+
+---
+
 ## Por que o erro `No Output Directory named "dist"` acontecia
 O build terminava certo, mas a Vercel procurava o bundle em `./dist` na raiz —
 e o frontend é gerado em `packages/web/dist` (é o `outDir` do Vite do workspace).
