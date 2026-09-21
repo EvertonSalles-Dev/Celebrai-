@@ -182,7 +182,25 @@ export function QrScanner({
 
         {status === 'running' && (
           <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-            <div className="h-[72%] w-[72%] rounded-2xl border-2 border-white/70" />
+            {/* Moldura com cantos — guia visual para enquadrar o QR Code. */}
+            <div className="relative h-[72%] w-[72%]">
+              <span className="absolute inset-0 rounded-2xl ring-1 ring-inset ring-white/20" />
+              <span className="absolute -left-0.5 -top-0.5 h-8 w-8 rounded-tl-2xl border-l-4 border-t-4 border-white" />
+              <span className="absolute -right-0.5 -top-0.5 h-8 w-8 rounded-tr-2xl border-r-4 border-t-4 border-white" />
+              <span className="absolute -bottom-0.5 -left-0.5 h-8 w-8 rounded-bl-2xl border-b-4 border-l-4 border-white" />
+              <span className="absolute -bottom-0.5 -right-0.5 h-8 w-8 rounded-br-2xl border-b-4 border-r-4 border-white" />
+              <span className="absolute inset-x-6 top-1/2 h-0.5 -translate-y-1/2 animate-pulse bg-gold-400/80 shadow-[0_0_12px_rgba(193,154,107,0.9)]" />
+            </div>
+          </div>
+        )}
+
+        {/* Colunas de estado sobre a câmera */}
+        {status === 'running' && (
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 flex justify-center pb-3">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-black/45 px-3 py-1 text-[11px] font-medium text-white backdrop-blur-sm">
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-success-400" aria-hidden />
+              Leitura ativa
+            </span>
           </div>
         )}
       </div>
@@ -200,19 +218,28 @@ export function QrScanner({
       </div>
 
       {showManual && (
-        <form onSubmit={handleManualSubmit} className="flex gap-2">
-          <input
-            value={manualCode}
-            onChange={(event) => setManualCode(event.target.value.toUpperCase())}
-            placeholder="EX.: EVENT-8F72AB91-X92K"
-            className="input font-mono uppercase"
-            autoComplete="off"
-            autoCapitalize="characters"
-            aria-label="Código do convite"
-          />
-          <Button type="submit" disabled={manualCode.trim().length < 4}>
-            Validar
-          </Button>
+        <form
+          onSubmit={handleManualSubmit}
+          className="space-y-3 rounded-2xl border-wedding-100 bg-white p-4 shadow-soft"
+        >
+          <label htmlFor="manual-code" className="label mb-0">
+            Código do convite
+          </label>
+          <div className="flex gap-2">
+            <input
+              id="manual-code"
+              value={manualCode}
+              onChange={(event) => setManualCode(event.target.value.toUpperCase())}
+              placeholder="EX.: EVENT-8F72AB91-X92K"
+              className="input font-mono uppercase"
+              autoComplete="off"
+              autoCapitalize="characters"
+            />
+            <Button type="submit" disabled={manualCode.trim().length < 4}>
+              Validar
+            </Button>
+          </div>
+          <p className="helper mb-0">Mínimo de 4 caracteres. O código está impresso no convite.</p>
         </form>
       )}
     </div>

@@ -171,7 +171,9 @@ export function CheckInScannerPage() {
             <p className="truncate text-sm font-semibold text-wedding-900">
               {event.hostsName ?? event.title}
             </p>
-            <p className="text-xs text-wedding-400">{formatShortDate(event.eventDate)}</p>
+            <p className="truncate text-xs text-wedding-400">
+              {formatShortDate(event.eventDate)}
+            </p>
           </div>
 
           <button
@@ -186,10 +188,44 @@ export function CheckInScannerPage() {
 
         {/* Contadores em tempo real */}
         {stats && (
-          <div className="mx-auto grid max-w-lg grid-cols-3 divide-x divide-wedding-100 border-t border-wedding-100 text-center">
-            <Counter label="Entradas" value={stats.entriesCount} />
-            <Counter label="Pessoas" value={stats.peopleInside} />
-            <Counter label="Esperados" value={stats.expectedPeople} />
+          <div className="border-t border-wedding-100 bg-wedding-50/60">
+            <div className="mx-auto grid max-w-lg grid-cols-3 gap-2 px-4 py-3">
+              <Counter
+                label="Entradas"
+                value={stats.entriesCount}
+                icon={<DoorOpen className="h-3.5 w-3.5" />}
+                tone="neutral"
+              />
+              <Counter
+                label="No local"
+                value={stats.peopleInside}
+                icon={<Users className="h-3.5 w-3.5" />}
+                tone="info"
+              />
+              <Counter
+                label="Esperados"
+                value={stats.expectedPeople}
+                icon={<UserCheck className="h-3.5 w-3.5" />}
+                tone="success"
+              />
+            </div>
+
+            {stats.expectedPeople > 0 && (
+              <div className="mx-auto max-w-lg px-4 pb-3">
+                <div className="h-1.5 w-full overflow-hidden rounded-full bg-wedding-200">
+                  <div
+                    className="h-full rounded-full bg-success-500 transition-all duration-500"
+                    style={{
+                      width: `${Math.min(100, Math.round((stats.entriesCount / stats.expectedPeople) * 100))}%`,
+                    }}
+                  />
+                </div>
+                <p className="mt-1.5 text-center text-[11px] text-wedding-500">
+                  {Math.min(100, Math.round((stats.entriesCount / stats.expectedPeople) * 100))}% dos
+                  convidados já entraram
+                </p>
+              </div>
+            )}
           </div>
         )}
       </header>
@@ -197,7 +233,7 @@ export function CheckInScannerPage() {
       {/* ---------------------------------------------------------------- */}
       {/* Área do scanner                                                   */}
       {/* ---------------------------------------------------------------- */}
-      <main className="mx-auto w-full max-w-lg flex flex-1 px-4 py-5">
+      <main className="mx-auto flex w-full max-w-lg flex-1 flex-col px-4 py-5">
         {!isOnline ? (
           <div className="card flex flex-col items-center gap-3 p-8 text-center">
             <div className="rounded-2xl bg-warning-100 p-3.5 text-warning-600">
@@ -211,14 +247,25 @@ export function CheckInScannerPage() {
           </div>
         ) : (
           <>
-            <div className="mb-3 flex items-center justify-between">
-              <p className="text-sm font-medium text-wedding-700">Aponte a câmera para o QR Code</p>
-              {validate.isPending && (
-                <span className="flex items-center gap-1.5 text-xs text-wedding-400">
-                  <Clock className="h-3.5 w-3.5 animate-spin" />
-                  Validando...
-                </span>
-              )}
+            <div className="mb-3 flex-wrap items-center justify-between gap-2">
+              <span className="inline-flex items-center gap-2 rounded-full border-wedding-100 bg-white px-3 py-1.5 text-xs font-medium text-wedding-700 shadow-soft">
+                <span
+                  className={cn(
+                    'h-2 w-2 rounded-full',
+                    validate.isPending ? 'animate-pulse bg-warning-500' : 'bg-success-500',
+                  )}
+                  aria-hidden
+                />
+                {validate.isPending ? 'Validando leitura...' : 'Pronto para ler'}
+              </span>
+
+              <span className="inline-flex items-center gap-1.5 text-xs text-wedding-500">
+                <Clock
+                  className={cn('h-3.5 w-3.5', validate.isPending && 'animate-spin')}
+                  aria-hidden
+                />
+                {validate.isPending ? 'Consultando servidor' : 'Aponte a câmera para o QR Code'}
+              </span>
             </div>
 
             <QrScanner onScan={handleScan} paused={scannerPaused} />
@@ -226,24 +273,48 @@ export function CheckInScannerPage() {
             {/* Últimas entradas */}
             {stats && stats.lastCheckIns.length > 0 && (
               <section className="mt-6">
-                <h2 className="mb-2 text-xs font-semibold uppercase tracking-wider text-wedding-400">
-                  Últimas entradas
-                </h2>
+                <div className="mb-3 flex items-center gap-3">
+                  <h2 className="text-xs font-semibold uppercase tracking-wider text-wedding-400">
+                    Últimas entradas
+                  </h2>
+                  <span
+                    aria-hidden="true"
+                    className="h-px flex-1 bg-gradient-to-r from-wedding-200 to-transparent"
+                  />
+                </div>
                 <ul className="space-y-2">
                   {stats.lastCheckIns.slice(0, 4).map((entry) => (
                     <li
                       key={entry.id}
-                      className="flex items-center justify-between rounded-xl border-wedding-100 bg-white px-4 py-3"
+                      className="flex items-center gap-3 rounded-2xl border-wedding-100 bg-white px-3.5 py-3 shadow-soft transition-shadow hover:shadow-card"
                     >
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-medium text-wedding-800">{entry.guestName}</p>
-                        <p className="text-xs text-wedding-400">
-                          {entry.atLabel} · {entry.peopleCount}{' '}
-                          {plural(entry.peopleCount, 'pessoa', 'pessoas')}
-                          {entry.method === 'MANUAL' ? ' · manual' : ''}
+                      <Initials name={entry.guestName} />
+
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium text-wedding-800">
+                          {entry.guestName}
+                        </p>
+                        <p className="mt-0.5 flex-wrap items-center gap-x-1.5 text-xs text-wedding-400">
+                          <span>{entry.atLabel}</span>
+                          <span aria-hidden className="text-wedding-300">·</span>
+                          <span>
+                            {entry.peopleCount}{' '}
+                            {plural(entry.peopleCount, 'pessoa', 'pessoas')}
+                          </span>
+                          {entry.method === 'MANUAL' && (
+                            <span className="rounded-md bg-warning-50 px-1.5 py-0.5 font-medium text-warning-700">
+                              manual
+                            </span>
+                          )}
                         </p>
                       </div>
-                      <CheckCircle2 className="h-4 w-4 shrink-0 text-success-500" />
+
+                      <span
+                        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-success-100 text-success-700"
+                        aria-label="Entrada confirmada"
+                      >
+                        <CheckCircle2 className="h-4 w-4" />
+                      </span>
                     </li>
                   ))}
                 </ul>
@@ -514,11 +585,66 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
   );
 }
 
-function Counter({ label, value }: { label: string; value: number }) {
+function Initials({ name }: { name: string }) {
+  const initials = name
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? '')
+    .join('');
+
   return (
-    <div className="px-2 py-2">
-      <p className="text-lg font-semibold tabular-nums text-wedding-900">{value}</p>
-      <p className="text-[10px] uppercase tracking-wider text-wedding-400">{label}</p>
+    <span
+      aria-hidden="true"
+      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-wedding-100 text-xs font-semibold text-wedding-700"
+    >
+      {initials || '?'}
+    </span>
+  );
+}
+
+function Counter({
+  label,
+  value,
+  icon,
+  tone = 'neutral',
+}: {
+  label: string;
+  value: number;
+  icon?: React.ReactNode;
+  tone?: 'neutral' | 'info' | 'success';
+}) {
+  const toneClass = {
+    neutral: 'text-wedding-900',
+    info: 'text-blue-700',
+    success: 'text-success-700',
+  }[tone];
+
+  const iconClass = {
+    neutral: 'bg-wedding-100 text-wedding-600',
+    info: 'bg-blue-100 text-blue-700',
+    success: 'bg-success-100 text-success-700',
+  }[tone];
+
+  return (
+    <div className="flex items-center gap-2.5 rounded-2xl border-wedding-100 bg-white px-3 py-2 shadow-soft">
+      {icon && (
+        <span
+          className={cn(
+            'flex h-8 w-8 shrink-0 items-center justify-center rounded-xl',
+            iconClass,
+          )}
+          aria-hidden
+        >
+          {icon}
+        </span>
+      )}
+      <div className="min-w-0">
+        <p className={cn('text-lg font-semibold leading-none tabular-nums', toneClass)}>{value}</p>
+        <p className="mt-0.5 truncate text-[10px] uppercase tracking-wider text-wedding-400">
+          {label}
+        </p>
+      </div>
     </div>
   );
 }

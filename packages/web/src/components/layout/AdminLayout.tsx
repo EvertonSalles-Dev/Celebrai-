@@ -199,7 +199,7 @@ export function AdminLayout() {
           </div>
         )}
 
-        <main className="flex flex-1 px-4 py-6 lg:px-8 lg:py-8">
+        <main className="flex min-w-0 flex-1 flex-col px-4 py-6 lg:px-8 lg:py-8">
           <Outlet />
         </main>
       </div>

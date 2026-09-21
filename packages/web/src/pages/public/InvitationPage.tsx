@@ -115,6 +115,7 @@ function InvitationContent({
   const displayName = event.hostsName ?? event.title;
 
   // Só exibe URLs de imagem válidas (evita blocos vazios quando o link quebra).
+  // Grade fixa de 3 colunas × 2 linhas: 6 fotos, todas do mesmo tamanho (4:5).
   const validGalleryImages = useMemo(
     () => (event.galleryImages ?? []).filter((url) => /^https?:\/\//.test(url)).slice(0, 6),
     [event.galleryImages],
@@ -296,7 +297,7 @@ function InvitationContent({
           <section className="animate-fade-in-up">
             <SectionTitle icon={Heart} label="Nossa história" />
 
-            <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
+            <div className="mt-6 grid grid-cols-3 gap-2 sm:gap-3">
               {validGalleryImages.map((url, index) => (
                 <GalleryImage key={url} url={url} index={index} />
               ))}

@@ -91,12 +91,18 @@ export function DashboardPage() {
         <>
           {/* Métricas consolidadas */}
           {(events?.length ?? 0) > 0 && (
-            <section className="mb-8">
-              <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-wedding-600">
-                Totais consolidados
-              </h2>
+            <section className="mb-10">
+              <div className="mb-5 flex items-center gap-3">
+                <h2 className="text-sm font-semibold uppercase tracking-wider text-wedding-600">
+                  Totais consolidados
+                </h2>
+                <span
+                  aria-hidden="true"
+                  className="h-px flex-1 bg-gradient-to-r from-wedding-200 to-transparent"
+                />
+              </div>
 
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 <StatCard
                   label="Convidados"
                   value={totals.guests}
@@ -168,7 +174,7 @@ export function DashboardPage() {
                 />
               </div>
             ) : (
-              <ul className="grid gap-4 lg:grid-cols-2">
+              <ul className="grid grid-cols-1 gap-4 xl:grid-cols-2">
                 {upcoming.slice(0, 6).map((event) => (
                   <li key={event.id}>
                     <EventCard event={event} />
@@ -221,10 +227,10 @@ function EventCard({
     counts.total > 0 ? Math.round((counts.confirmed / counts.total) * 100) : 0;
 
   return (
-    <article className="card group overflow-hidden transition-shadow hover:shadow-card">
-      <div className="flex gap-4 p-5">
+    <article className="card group h-full overflow-hidden transition-shadow hover:shadow-card">
+      <div className="flex gap-4 p-4 sm:p-5">
         {/* Foto / placeholder */}
-        <div className="hidden h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-wedding-100 sm:block">
+        <div className="hidden h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-wedding-100 md:block">
           {event.coverImageUrl ? (
             <img
               src={event.coverImageUrl}
@@ -239,9 +245,9 @@ function EventCard({
           )}
         </div>
 
-        <div className="min-w-0 flex flex-1">
-          <div className="flex items-start justify-between gap-2">
-            <div className="min-w-0">
+        <div className="flex min-w-0 flex-1 flex-col">
+          <div className="flex flex-wrap items-start gap-2">
+            <div className="min-w-0 flex-1 basis-40">
               <h3 className="truncate text-lg font-display font-semibold text-wedding-900">
                 {event.hostsName ?? event.title}
               </h3>
@@ -264,7 +270,7 @@ function EventCard({
           </div>
 
           {/* Números */}
-          <div className="mt-4 grid grid-cols-4 gap-2 text-center">
+          <div className="mt-4 grid grid-cols-2 gap-3 text-center sm:grid-cols-4 sm:gap-2">
             <MiniStat label="Convites" value={counts.total} />
             <MiniStat label="Confirm." value={counts.confirmed} tone="success" />
             <MiniStat label="Pend." value={counts.pending} tone="warning" />
@@ -286,7 +292,7 @@ function EventCard({
           </div>
 
           {/* Ações */}
-          <div className="mt-4 flex flex-wrap gap-2">
+          <div className="mt-4 flex flex-wrap items-center gap-2">
             <Link to={`/eventos/${event.id}/convidados`} className="btn-secondary !px-3 !py-2 !text-xs">
               Convidados
             </Link>
@@ -333,7 +339,7 @@ function MiniStat({
   return (
     <div>
       <p className={`text-lg font-semibold tabular-nums ${toneClass}`}>{value}</p>
-      <p className="text-[10px] uppercase tracking-wider text-wedding-500">{label}</p>
+      <p className="truncate text-[10px] uppercase tracking-wider text-wedding-500">{label}</p>
     </div>
   );
 }

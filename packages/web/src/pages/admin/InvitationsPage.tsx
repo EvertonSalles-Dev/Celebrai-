@@ -4,12 +4,16 @@ import {
   AlertCircle,
   Ban,
   CheckCircle2,
+  Clock,
   Copy,
   Eye,
+  Heart,
   Link2,
+  Mail,
   QrCode,
   RotateCcw,
   Send,
+  Sparkles,
   Users,
 } from 'lucide-react';
 import {
@@ -184,36 +188,122 @@ export function InvitationsPage() {
   const allSelected = filtered.length > 0 && selected.size === filtered.length;
   const sendableCount = [...selected].length;
 
+  // Contagens por status — alimentam os cartões de resumo e os filtros.
+  const counts = useMemo(() => {
+    const base: Record<InvitationStatus | 'ALL', number> = {
+      ALL: list.length,
+      PENDING: 0,
+      CONFIRMED: 0,
+      CHECKED_IN: 0,
+      DECLINED: 0,
+      CANCELLED: 0,
+    };
+    for (const invitation of list) {
+      base[invitation.status] += 1;
+    }
+    return base;
+  }, [list]);
+
+  // Pessoas confirmadas (soma dos acompanhantes) e convites já enviados.
+  const confirmedPeople = useMemo(
+    () =>
+      list.reduce(
+        (total, invitation) =>
+          total +
+          (invitation.status === 'CONFIRMED' || invitation.status === 'CHECKED_IN'
+            ? invitation.response?.attendingCount ?? 1
+            : 0),
+        0,
+      ),
+    [list],
+  );
+
+  const sentCount = useMemo(() => list.filter((item) => Boolean(item.sentAt)).length, [list]);
+
   return (
-    <div className="mx-auto max-w-7xl">
-      <header className="mb-6 flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-display font-semibold tracking-tight text-wedding-900">Convites</h1>
-          <p className="mt-1 text-sm text-wedding-500">
-            {list.length} {plural(list.length, 'convite', 'convites')} · envie e acompanhe as
-            respostas
-          </p>
+    <div className="mx-auto w-full min-w-0 max-w-7xl">
+      <header className="mb-7">
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-wedding-500">
+              <Heart className="h-3.5 w-3.5" aria-hidden />
+              Central de convites
+            </p>
+            <h1 className="mt-1 text-3xl font-display font-semibold tracking-tight text-wedding-900">
+              Convites
+            </h1>
+            <p className="mt-1 text-sm text-wedding-500">
+              Envie os links individuais e acompanhe cada resposta.
+            </p>
+          </div>
+
+          <div className="flex gap-2">
+            <Link to={`/eventos/${eventId}/convidados`} className="btn-secondary">
+              <Users className="h-4 w-4" />
+              Convidados
+            </Link>
+            {permissions.canManageEvent && (
+              <Button
+                icon={<Send className="h-4 w-4" />}
+                onClick={() => {
+                  setSendResult(null);
+                  setSendOpen(true);
+                }}
+                disabled={sendableCount === 0}
+              >
+                Enviar {sendableCount > 0 ? `(${sendableCount})` : ''}
+              </Button>
+            )}
+          </div>
         </div>
 
-        <div className="flex gap-2">
-          <Link to={`/eventos/${eventId}/convidados`} className="btn-secondary">
-            <Users className="h-4 w-4" />
-            Convidados
-          </Link>
-          {permissions.canManageEvent && (
-            <Button
-              icon={<Send className="h-4 w-4" />}
-              onClick={() => {
-                setSendResult(null);
-                setSendOpen(true);
-              }}
-              disabled={sendableCount === 0}
-            >
-              Enviar {sendableCount > 0 ? `(${sendableCount})` : ''}
-            </Button>
-          )}
+        {/* Divisória ornamental — ecoa o convite do convidado. */}
+        <div className="mt-5 flex items-center gap-3">
+          <span
+            aria-hidden="true"
+            className="h-px flex-1 bg-gradient-to-r from-transparent via-wedding-300 to-transparent"
+          />
+          <Sparkles className="h-3.5 w-3.5 text-gold-400" aria-hidden />
+          <span
+            aria-hidden="true"
+            className="h-px flex-1 bg-gradient-to-r from-transparent via-wedding-300 to-transparent"
+          />
         </div>
       </header>
+
+      {/* Cartões de resumo */}
+      {!isLoading && !error && list.length > 0 && (
+        <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <SummaryCard
+            label="Convites"
+            value={list.length}
+            hint="no total"
+            icon={<Mail className="h-4 w-4" />}
+            tone="neutral"
+          />
+          <SummaryCard
+            label="Confirmados"
+            value={counts.CONFIRMED + counts.CHECKED_IN}
+            hint={`${confirmedPeople} ${plural(confirmedPeople, 'pessoa', 'pessoas')}`}
+            icon={<CheckCircle2 className="h-4 w-4" />}
+            tone="success"
+          />
+          <SummaryCard
+            label="Aguardando"
+            value={counts.PENDING}
+            hint="sem resposta"
+            icon={<Clock className="h-4 w-4" />}
+            tone="warning"
+          />
+          <SummaryCard
+            label="Enviados"
+            value={sentCount}
+            hint={`${list.length - sentCount} sem envio`}
+            icon={<Send className="h-4 w-4" />}
+            tone="info"
+          />
+        </div>
+      )}
 
       {/* Filtros por status */}
       <div className="no-scrollbar mb-5 flex gap-2 overflow-x-auto pb-1">
@@ -226,23 +316,36 @@ export function InvitationsPage() {
             ['DECLINED', 'Recusados'],
             ['CANCELLED', 'Cancelados'],
           ] as const
-        ).map(([value, label]) => (
-          <button
-            key={value}
-            type="button"
-            onClick={() => {
-              setStatusFilter(value);
-              setSelected(new Set());
-            }}
-            className={`whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-              statusFilter === value
-                ? 'bg-wedding-900 text-white'
-                : 'bg-white text-wedding-600 hover:bg-wedding-100'
-            }`}
-          >
-            {label}
-          </button>
-        ))}
+        ).map(([value, label]) => {
+          const active = statusFilter === value;
+          const total = counts[value] ?? 0;
+
+          return (
+            <button
+              key={value}
+              type="button"
+              onClick={() => {
+                setStatusFilter(value);
+                setSelected(new Set());
+              }}
+              aria-pressed={active}
+              className={`inline-flex items-center gap-2 whitespace-nowrap rounded-full border px-4 py-2 text-sm font-medium transition-all ${
+                active
+                  ? 'border-wedding-900 bg-wedding-900 text-white shadow-soft'
+                  : 'border-wedding-200 bg-white text-wedding-600 hover:border-wedding-300 hover:bg-wedding-50'
+              }`}
+            >
+              {label}
+              <span
+                className={`rounded-full px-1.5 py-0.5 text-[11px] font-semibold tabular-nums ${
+                  active ? 'bg-white/20 text-white' : 'bg-wedding-100 text-wedding-600'
+                }`}
+              >
+                {total}
+              </span>
+            </button>
+          );
+        })}
       </div>
 
       {isLoading && <SkeletonTable rows={8} />}
@@ -255,6 +358,18 @@ export function InvitationsPage() {
             icon={QrCode}
             title="Nenhum convite neste filtro"
             description="Ajuste o filtro ou cadastre convidados para gerar convites."
+            action={
+              statusFilter !== 'ALL' ? (
+                <Button variant="secondary" onClick={() => setStatusFilter('ALL')}>
+                  Ver todos os convites
+                </Button>
+              ) : (
+                <Link to={`/eventos/${eventId}/convidados`} className="btn-secondary">
+                  <Users className="h-4 w-4" />
+                  Cadastrar convidados
+                </Link>
+              )
+            }
           />
         </div>
       )}
@@ -300,10 +415,17 @@ export function InvitationsPage() {
                   )}
 
                   <td>
-                    <p className="font-medium text-wedding-900">{invitation.guest.fullName}</p>
-                    <p className="text-xs text-wedding-400">
-                      {invitation.guest.whatsapp ?? invitation.guest.email ?? 'sem contato'}
-                    </p>
+                    <div className="flex items-center gap-3">
+                      <Initials name={invitation.guest.fullName} />
+                      <div className="min-w-0">
+                        <p className="font-medium text-wedding-900">
+                          {invitation.guest.fullName}
+                        </p>
+                        <p className="text-xs text-wedding-400">
+                          {invitation.guest.whatsapp ?? invitation.guest.email ?? 'sem contato'}
+                        </p>
+                      </div>
+                    </div>
                   </td>
 
                   <td className="text-center tabular-nums">
@@ -662,6 +784,75 @@ export function InvitationsPage() {
         )}
       </Modal>
     </div>
+  );
+}
+
+function SummaryCard({
+  label,
+  value,
+  hint,
+  icon,
+  tone,
+}: {
+  label: string;
+  value: number;
+  hint?: string;
+  icon: React.ReactNode;
+  tone: 'neutral' | 'success' | 'warning' | 'info';
+}) {
+  const iconTone = {
+    neutral: 'bg-wedding-100 text-wedding-700 ring-wedding-200/60',
+    success: 'bg-success-100 text-success-700 ring-success-200/60',
+    warning: 'bg-warning-100 text-warning-700 ring-warning-200/60',
+    info: 'bg-blue-100 text-blue-700 ring-blue-200/60',
+  }[tone];
+
+  const valueTone = {
+    neutral: 'text-wedding-900',
+    success: 'text-success-700',
+    warning: 'text-warning-700',
+    info: 'text-blue-700',
+  }[tone];
+
+  return (
+    <div className="card animate-fade-in-up p-4">
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-wedding-500">
+            {label}
+          </p>
+          <p className={`mt-1.5 text-2xl font-semibold leading-none tabular-nums ${valueTone}`}>
+            {value}
+          </p>
+          {hint && <p className="mt-1.5 truncate text-xs text-wedding-500">{hint}</p>}
+        </div>
+
+        <span
+          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl ring-1 ring-inset ${iconTone}`}
+          aria-hidden
+        >
+          {icon}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function Initials({ name }: { name: string }) {
+  const initials = name
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? '')
+    .join('');
+
+  return (
+    <span
+      aria-hidden="true"
+      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-wedding-100 text-xs font-semibold text-wedding-700"
+    >
+      {initials || '?'}
+    </span>
   );
 }
 
