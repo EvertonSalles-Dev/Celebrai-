@@ -73,10 +73,13 @@ async function refreshAccessToken(): Promise<boolean> {
 
   refreshPromise = (async () => {
     try {
+      // Sem `Content-Type` e sem corpo: o Fastify recusa um POST que declare
+      // `application/json` e mande corpo vazio —
+      //   FST_ERR_CTP_EMPTY_JSON_BODY (400)
+      // O token de refresh vem do cookie httpOnly, então nada precisa ir no body.
       const response = await fetch(`${API_URL}${API_PREFIX}/auth/refresh`, {
         method: 'POST',
         credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
       });
 
       if (!response.ok) return false;

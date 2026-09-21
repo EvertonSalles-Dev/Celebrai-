@@ -30,6 +30,43 @@ export async function buildServer(): Promise<FastifyInstance> {
   });
 
   // -------------------------------------------------------------------------
+  // Body JSON tolerante a corpo vazio
+  // -------------------------------------------------------------------------
+  //
+  // Por padrão o Fastify rejeita um POST que declara `Content-Type:
+  // application/json` e envia corpo vazio (ou Content-Length: 0):
+  //
+  //   FST_ERR_CTP_EMPTY_JSON_BODY (400)
+  //   "Body cannot be empty when content-type is set to 'application/json'"
+  //
+  // Isso quebra rotas cujo payload não vem do corpo — `POST /auth/refresh` e
+  // `POST /auth/logout` usam o cookie httpOnly, então o front as envia sem body
+  // (apenas o Content-Type, herança de um cliente que sempre o definia).
+  //
+  // Tratamos o corpo vazio como `{}` em vez de erro: a validação das rotas já
+  // distingue o que é obrigatório, e assim clientes antigos em cache — que
+  // continuam mandando o header — não recebem 400 numa operação legítima.
+  app.addContentTypeParser(
+    'application/json',
+    { parseAs: 'string' },
+    (_request, body, done) => {
+      const raw = (body as string).trim();
+      if (raw === '') {
+        done(null, {});
+        return;
+      }
+      try {
+        done(null, JSON.parse(raw));
+      } catch (error) {
+        // Mantém o comportamento do Fastify para JSON inválido (400).
+        const err = error as Error & { statusCode?: number };
+        err.statusCode = 400;
+        done(err, undefined);
+      }
+    },
+  );
+
+  // -------------------------------------------------------------------------
   // Segurança
   // -------------------------------------------------------------------------
   await app.register(fastifyHelmet, {
