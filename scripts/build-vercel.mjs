@@ -41,9 +41,10 @@ function run(command) {
   execSync(command, { stdio: 'inherit', cwd: repoRoot });
 }
 
-// 1. Generate Prisma Client
-console.log('[celebrai-vercel] 1/3 Generating Prisma Client...');
+// 1. Generate Prisma Client & Migrate DB
+console.log('[celebrai-vercel] 1/3 Generating Prisma Client & Migrating DB...');
 run('npm run db:generate');
+run('npm run db:deploy --workspace @celebrai/api');
 
 // 2. Build API
 console.log('[celebrai-vercel] 2/3 Building API package...');
