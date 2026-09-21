@@ -74,7 +74,39 @@ export const isServerless = Boolean(
   process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME,
 );
 
+/**
+ * Aliases de conexão PostgreSQL que a Vercel e integrações (Neon, Vercel
+ * Postgres, Supabase) injetam no ambiente.
+ *
+ * O schema do Prisma só lê `DATABASE_URL`. Sem este preenchimento, um projeto
+ * cuja conexão chegou apenas como `POSTGRES_URL` ou `PRISMA_DATABASE_URL`
+ * falharia na inicialização com `DATABASE_URL é obrigatória`, mesmo tendo o
+ * banco corretamente configurado no painel.
+ */
+const DATABASE_URL_ALIASES = [
+  'POSTGRES_URL',
+  'PRISMA_DATABASE_URL',
+  'POSTGRES_PRISMA_URL',
+  'POSTGRES_URL_NON_POOLING',
+] as const;
+
+function applyDatabaseUrlAlias(): void {
+  const current = process.env.DATABASE_URL;
+
+  // Já é uma URL PostgreSQL válida — nada a fazer.
+  if (current && /^postgres(ql)?:\/\//.test(current.trim())) return;
+
+  const alias = DATABASE_URL_ALIASES.find((key) => {
+    const value = process.env[key];
+    return value && /^postgres(ql)?:\/\//.test(value.trim());
+  });
+
+  if (alias) process.env.DATABASE_URL = process.env[alias];
+}
+
 function loadEnv(): AppEnv {
+  applyDatabaseUrlAlias();
+
   const parsed = envSchema.safeParse(process.env);
 
   if (!parsed.success) {
