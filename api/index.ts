@@ -43,27 +43,68 @@ let appPromise: Promise<Awaited<ReturnType<typeof buildServer>>> | undefined;
  * Se a Vercel já entregar o caminho original (`/api/auth/login`, comportamento
  * padrão para functions), não existe o parâmetro `path` e a função não altera
  * nada — é seguro chamá-la sempre.
+ *
+ * Há também o caso de a Vercel entregar o caminho do DESTINO do rewrite
+ * (`/api/index`) mantendo o restante na query string. Como as rotas são
+ * registradas com o prefixo `/api` (ver `registerRoutes`), `/api/index` não
+ * casa com `/api/auth/login` e o Fastify devolve
+ * `404 NOT_FOUND — Rota não encontrada: GET /api/auth/login`.
+ * Aqui o prefixo é reaplicado para os formatos `/index`, `/api` e `/api/index`.
  */
 function restoreOriginalPath(req: VercelRequest): void {
   const prefix = '/api';
   const rawUrl = req.url ?? '';
 
-  const [, search = ''] = rawUrl.split('?');
+  const [pathname = '', search = ''] = rawUrl.split('?');
   const params = new URLSearchParams(search);
   const captured = params.get('path');
 
-  // Sem `path` capturado, a URL já veio no formato original esperado pelo
-  // Fastify (`/api/...`) e não há nada a corrigir.
-  if (!captured) return;
+  /** Reconstrói a URL completa a partir do caminho capturado. */
+  const withCapturedPath = (): string => {
+    params.delete('path');
+    const restored = `${prefix}/${(captured ?? '').replace(/^\/+/, '')}`;
+    const rest = params.toString();
+    return rest ? `${restored}?${rest}` : restored;
+  };
 
-  params.delete('path');
+  if (captured) {
+    req.url = withCapturedPath();
+    return;
+  }
 
-  const restored = `${prefix}/${captured.replace(/^\/+/, '')}`;
+  // O rewrite apontou para a própria função (`/api/index`) sem preservar o
+  // caminho capturado: sem correção nenhuma requisição encontraria rota.
+  if (pathname === '/api/index' || pathname === '/api' || pathname === '/api/') {
+    req.url = withCapturedPath();
+  }
+}
 
-  // Preserva a query string original da chamada, se houver.
-  const rest = params.toString();
+/**
+ * Executa o handler com uma URL simulada e devolve o que o Fastify respondeu.
+ *
+ * Permite validar a reescrita de caminho e o roteamento (ex.: `/api/index` ou
+ * `?path=auth/login` virando `/api/auth/login`) sem depender da Vercel.
+ *
+ * Use `method: 'POST'` em rotas de escrita: um GET em `/api/auth/login` devolve
+ * 404 mesmo com o roteamento correto, porque a rota só existe para POST.
+ */
+export async function debugRouting(
+  url: string,
+  method: 'GET' | 'POST' = 'GET',
+  payload?: Record<string, unknown>,
+): Promise<{ status: number; body: string; url: string }> {
+  const app = await getApp();
+  const req = { method, url, headers: { host: 'localhost' } } as unknown as VercelRequest;
 
-  req.url = rest ? `${restored}?${rest}` : restored;
+  restoreOriginalPath(req);
+
+  const response = await app.inject({
+    method,
+    url: req.url ?? '/',
+    ...(payload !== undefined ? { payload } : {}),
+  });
+
+  return { status: response.statusCode, body: response.body, url: req.url ?? '' };
 }
 
 /** Constrói (ou reutiliza) a instância do Fastify já pronta para uso. */
@@ -80,7 +121,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     const app = await getApp();
 
+    // URL original antes de qualquer ajuste: é o que permite diagnosticar um
+    // 404 de rota pelos logs da Vercel sem precisar reproduzir o deploy.
+    const originalUrl = req.url ?? '';
+
     restoreOriginalPath(req);
+
+    // eslint-disable-next-line no-console
+    console.log(`[celebrai] ${req.method} ${originalUrl} -> ${req.url}`);
 
     // `app.server` é o servidor HTTP do Node; emitir `request` entrega o par
     // req/res do Vercel direto ao roteador do Fastify (padrão recomendado para

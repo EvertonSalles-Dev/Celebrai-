@@ -30,21 +30,36 @@ import {
  */
 
 /** Blocos de include declarados uma única vez para evitar duplicação. */
-const GUEST_SUMMARY_INCLUDE = {
-  guest: {
-    select: {
-      id: true,
-      fullName: true,
-      email: true,
-      whatsapp: true,
-      allowedCompanions: true,
-    },
-  },
-} satisfies Prisma.InvitationInclude;
+/**
+ * O convidado NÃO entra como `include`: a relação é declarada sem campo inverso
+ * em `Guest` (ver `prisma/schema.dev.prisma`), então os dados são anexados com
+ * uma segunda consulta por `guestId` — ver `attachGuest`/`loadGuestsById`.
+ */
+const GUEST_SUMMARY_SELECT = {
+  id: true,
+  fullName: true,
+  email: true,
+  whatsapp: true,
+  allowedCompanions: true,
+} as const;
 
-const GUEST_NAME_INCLUDE = {
-  guest: { select: { fullName: true } },
-} satisfies Prisma.InvitationInclude;
+const GUEST_NAME_SELECT = { fullName: true } as const;
+
+type GuestSummary = Prisma.GuestGetPayload<{ select: typeof GUEST_SUMMARY_SELECT }>;
+type GuestName = Prisma.GuestGetPayload<{ select: typeof GUEST_NAME_SELECT }>;
+
+/** Carrega convidados por id (substitui o antigo `include: { guest }`). */
+async function loadGuestsById<T extends Prisma.GuestSelect>(
+  guestIds: string[],
+  select: T,
+): Promise<Map<string, Prisma.GuestGetPayload<{ select: T }>>> {
+  const guests = await prisma.guest.findMany({
+    where: { id: { in: guestIds } },
+    select,
+  });
+
+  return new Map(guests.map((guest) => [(guest as { id: string }).id, guest]));
+}
 
 function assertCanManage(role: string): void {
   if (role === 'RECEPTIONIST') {
@@ -69,25 +84,33 @@ export const invitationController = {
 
       const query = request.query as { status?: string; search?: string };
 
+      // O vínculo convite→convidado é feito por `invitations.guestId`; a relação
+      // `guest` é declarada sem campo inverso em `Guest` (ver
+      // `prisma/schema.dev.prisma`), por isso o filtro por evento/nome é
+      // resolvido antes, sobre `Guest`, e aplicado como `guestId: { in }`.
+      const guests = await prisma.guest.findMany({
+        where: {
+          eventId,
+          ...(query.search ? { fullName: { contains: query.search } } : {}),
+        },
+        select: {
+          id: true,
+          fullName: true,
+          email: true,
+          whatsapp: true,
+          allowedCompanions: true,
+        },
+      });
+
+      const guestsById = new Map(guests.map((guest) => [guest.id, guest]));
+
       const invitations = await prisma.invitation.findMany({
         where: {
-          guest: {
-            eventId,
-            ...(query.search ? { fullName: { contains: query.search, mode: 'insensitive' } } : {}),
-          },
+          guestId: { in: guests.map((guest) => guest.id) },
           ...(query.status && query.status !== 'ALL' ? { status: query.status as never } : {}),
         },
         orderBy: { createdAt: 'desc' },
         include: {
-          guest: {
-            select: {
-              id: true,
-              fullName: true,
-              email: true,
-              whatsapp: true,
-              allowedCompanions: true,
-            },
-          },
           response: { select: { attendingCount: true, cpfMasked: true, createdAt: true } },
           checkIns: { orderBy: { createdAt: 'desc' }, take: 1 },
         },
@@ -105,7 +128,7 @@ export const invitationController = {
           cancelledReason: invitation.cancelledReason,
           hasQrCode: Boolean(invitation.qrCodePrefix),
           qrCodePrefix: invitation.qrCodePrefix,
-          guest: invitation.guest,
+          guest: guestsById.get(invitation.guestId) ?? null,
           response: invitation.response,
           lastCheckIn: invitation.checkIns[0] ?? null,
         })),
@@ -126,11 +149,18 @@ export const invitationController = {
       assertCanManage(request.user.role);
 
       const invitation = await prisma.invitation.findFirst({
-        where: { id, guest: { eventId } },
-        include: GUEST_NAME_INCLUDE,
+        where: { id },
+        select: { id: true, guestId: true, status: true },
       });
 
       if (!invitation) throw new NotFoundError('Convite não encontrado.');
+
+      const guest = await prisma.guest.findFirst({
+        where: { id: invitation.guestId, eventId },
+        select: GUEST_NAME_SELECT,
+      });
+
+      if (!guest) throw new NotFoundError('Convite não encontrado.');
 
       if (invitation.status === 'CANCELLED') {
         throw new ValidationError('Este convite está cancelado. Reabra antes de gerar o link.');
@@ -146,11 +176,11 @@ export const invitationController = {
         actorName: request.user.name,
         entity: 'Invitation',
         entityId: id,
-        description: `Link do convite reemitido para "${invitation.guest.fullName}"`,
+        description: `Link do convite reemitido para "${guest.fullName}"`,
         ip: request.ip,
       });
 
-      return ok(reply, { link: rotated.link, guestName: invitation.guest.fullName });
+      return ok(reply, { link: rotated.link, guestName: guest.fullName });
     } catch (error) {
       return handleError(reply, error);
     }
@@ -175,9 +205,14 @@ export const invitationController = {
       if (!event) throw new NotFoundError('Evento não encontrado.');
 
       const invitations = await prisma.invitation.findMany({
-        where: { id: { in: body.invitationIds }, guest: { eventId } },
-        include: GUEST_SUMMARY_INCLUDE,
+        where: { id: { in: body.invitationIds } },
       });
+
+      // Só convites de convidados deste evento (o vínculo vem de `guestId`).
+      const guestsById = await loadGuestsById(
+        invitations.map((invitation) => invitation.guestId),
+        GUEST_SUMMARY_SELECT,
+      );
 
       const results: Array<{
         invitationId: string;
@@ -189,10 +224,13 @@ export const invitationController = {
       }> = [];
 
       for (const invitation of invitations) {
+        const guest = guestsById.get(invitation.guestId);
+        if (!guest) continue;
+
         if (invitation.status === 'CANCELLED') {
           results.push({
             invitationId: invitation.id,
-            guestName: invitation.guest.fullName,
+            guestName: guest.fullName,
             channel: body.channel,
             status: 'SKIPPED',
             link: '',
@@ -209,9 +247,9 @@ export const invitationController = {
           await logNotification({
             channel: 'LINK',
             eventId,
-            guestId: invitation.guest.id,
+            guestId: guest.id,
             invitationId: invitation.id,
-            to: invitation.guest.whatsapp ?? invitation.guest.email ?? null,
+            to: guest.whatsapp ?? guest.email ?? null,
             body: link,
             provider: 'internal',
             status: 'SENT',
@@ -219,7 +257,7 @@ export const invitationController = {
 
           results.push({
             invitationId: invitation.id,
-            guestName: invitation.guest.fullName,
+            guestName: guest.fullName,
             channel: body.channel,
             status: 'SENT',
             link,
@@ -228,10 +266,10 @@ export const invitationController = {
         }
 
         if (body.channel === 'EMAIL') {
-          if (!invitation.guest.email) {
+          if (!guest.email) {
             results.push({
               invitationId: invitation.id,
-              guestName: invitation.guest.fullName,
+              guestName: guest.fullName,
               channel: body.channel,
               status: 'SKIPPED',
               link,
@@ -240,15 +278,15 @@ export const invitationController = {
             continue;
           }
 
-          const html = buildInviteEmailHtml({ guest: invitation.guest, event, link });
+          const html = buildInviteEmailHtml({ guest, event, link });
           const subject = buildInviteEmailSubject(event);
 
           const notificationId = await logNotification({
             channel: 'EMAIL',
             eventId,
-            guestId: invitation.guest.id,
+            guestId: guest.id,
             invitationId: invitation.id,
-            to: invitation.guest.email,
+            to: guest.email,
             subject,
             body: body.customMessage ?? `Convite para ${eventDisplayName(event)}`,
             provider: env.MAIL_DRIVER,
@@ -256,10 +294,10 @@ export const invitationController = {
           });
 
           const sent = await mailProvider.send({
-            to: invitation.guest.email,
+            to: guest.email,
             subject,
             html,
-            text: buildWhatsAppInviteText({ guest: invitation.guest, event, link }),
+            text: buildWhatsAppInviteText({ guest, event, link }),
           });
 
           await finalizeNotification(notificationId, sent.status, sent.error);
@@ -270,7 +308,7 @@ export const invitationController = {
 
           results.push({
             invitationId: invitation.id,
-            guestName: invitation.guest.fullName,
+            guestName: guest.fullName,
             channel: body.channel,
             status: sent.status,
             link,
@@ -280,10 +318,10 @@ export const invitationController = {
         }
 
         // WHATSAPP
-        if (!invitation.guest.whatsapp) {
+        if (!guest.whatsapp) {
           results.push({
             invitationId: invitation.id,
-            guestName: invitation.guest.fullName,
+            guestName: guest.fullName,
             channel: body.channel,
             status: 'SKIPPED',
             link,
@@ -292,21 +330,20 @@ export const invitationController = {
           continue;
         }
 
-        const text =
-          body.customMessage ?? buildWhatsAppInviteText({ guest: invitation.guest, event, link });
+        const text = body.customMessage ?? buildWhatsAppInviteText({ guest, event, link });
 
         const notificationId = await logNotification({
           channel: 'WHATSAPP',
           eventId,
-          guestId: invitation.guest.id,
+          guestId: guest.id,
           invitationId: invitation.id,
-          to: formatBrazilianPhone(invitation.guest.whatsapp),
+          to: formatBrazilianPhone(guest.whatsapp),
           body: text,
           provider: env.WHATSAPP_DRIVER,
           status: 'QUEUED',
         });
 
-        const sent = await whatsappProvider.send({ to: invitation.guest.whatsapp, body: text });
+        const sent = await whatsappProvider.send({ to: guest.whatsapp, body: text });
 
         await finalizeNotification(notificationId, sent.status, sent.error);
 
@@ -316,7 +353,7 @@ export const invitationController = {
 
         results.push({
           invitationId: invitation.id,
-          guestName: invitation.guest.fullName,
+          guestName: guest.fullName,
           channel: body.channel,
           status: sent.status,
           link,
@@ -366,18 +403,18 @@ export const invitationController = {
       await request.server.assertEventAccess(request.user, eventId);
 
       const invitation = await prisma.invitation.findFirst({
-        where: { id, guest: { eventId } },
-        include: {
-          guest: {
-            include: {
-              event: { include: { venue: true } },
-            },
-          },
-          response: true,
-        },
+        where: { id },
+        include: { response: true },
       });
 
       if (!invitation) throw new NotFoundError('Convite não encontrado.');
+
+      const guest = await prisma.guest.findFirst({
+        where: { id: invitation.guestId, eventId },
+        select: { fullName: true, allowedCompanions: true },
+      });
+
+      if (!guest) throw new NotFoundError('Convite não encontrado.');
 
       if (invitation.status !== 'CONFIRMED' && invitation.status !== 'CHECKED_IN') {
         throw new ValidationError(
@@ -385,7 +422,11 @@ export const invitationController = {
         );
       }
 
-      const event = invitation.guest.event;
+      const event = await prisma.event.findUniqueOrThrow({
+        where: { id: eventId },
+        include: { venue: true },
+      });
+
       // Credencial estável: se já houver QR emitido, devolve o mesmo.
       const issued = await invitationService.getOrIssueQrCode(invitation.id, event.slug);
 
@@ -397,7 +438,7 @@ export const invitationController = {
         actorName: request.user.name,
         entity: 'Invitation',
         entityId: invitation.id,
-        description: `QR Code emitido para "${invitation.guest.fullName}"`,
+        description: `QR Code emitido para "${guest.fullName}"`,
         ip: request.ip,
       });
 
@@ -405,8 +446,8 @@ export const invitationController = {
         code: issued.code,
         issuedAt: issued.issuedAt,
         guest: {
-          name: invitation.guest.fullName,
-          allowedCompanions: invitation.guest.allowedCompanions,
+          name: guest.fullName,
+          allowedCompanions: guest.allowedCompanions,
           attendingCount: invitation.response?.attendingCount ?? null,
         },
         event: {
@@ -440,10 +481,16 @@ export const invitationController = {
       const body = (request.body ?? {}) as { reason?: string };
 
       const invitation = await prisma.invitation.findFirst({
-        where: { id, guest: { eventId } },
-        include: GUEST_NAME_INCLUDE,
+        where: { id },
+        select: { id: true, guestId: true },
       });
-      if (!invitation) throw new NotFoundError('Convite não encontrado.');
+      const guest = invitation
+        ? await prisma.guest.findFirst({
+          where: { id: invitation.guestId, eventId },
+          select: GUEST_NAME_SELECT,
+        })
+        : null;
+      if (!invitation || !guest) throw new NotFoundError('Convite não encontrado.');
 
       await invitationService.cancel(id, body.reason);
 
@@ -455,7 +502,7 @@ export const invitationController = {
         actorName: request.user.name,
         entity: 'Invitation',
         entityId: id,
-        description: `Convite de "${invitation.guest.fullName}" cancelado`,
+        description: `Convite de "${guest.fullName}" cancelado`,
         metadata: { reason: body.reason ?? null },
         ip: request.ip,
       });
@@ -474,10 +521,16 @@ export const invitationController = {
       assertCanManage(request.user.role);
 
       const invitation = await prisma.invitation.findFirst({
-        where: { id, guest: { eventId } },
-        include: GUEST_NAME_INCLUDE,
+        where: { id },
+        select: { id: true, guestId: true },
       });
-      if (!invitation) throw new NotFoundError('Convite não encontrado.');
+      const guest = invitation
+        ? await prisma.guest.findFirst({
+          where: { id: invitation.guestId, eventId },
+          select: GUEST_NAME_SELECT,
+        })
+        : null;
+      if (!invitation || !guest) throw new NotFoundError('Convite não encontrado.');
 
       await invitationService.reopen(id);
 
@@ -489,7 +542,7 @@ export const invitationController = {
         actorName: request.user.name,
         entity: 'Invitation',
         entityId: id,
-        description: `Convite de "${invitation.guest.fullName}" reaberto`,
+        description: `Convite de "${guest.fullName}" reaberto`,
         ip: request.ip,
       });
 
@@ -510,10 +563,16 @@ export const invitationController = {
       assertCanManage(request.user.role);
 
       const invitation = await prisma.invitation.findFirst({
-        where: { id, guest: { eventId } },
-        include: GUEST_SUMMARY_INCLUDE,
+        where: { id },
+        select: { id: true, guestId: true },
       });
       if (!invitation) throw new NotFoundError('Convite não encontrado.');
+
+      const guest = await prisma.guest.findFirst({
+        where: { id: invitation.guestId, eventId },
+        select: GUEST_SUMMARY_SELECT,
+      });
+      if (!guest) throw new NotFoundError('Convite não encontrado.');
 
       const event = await prisma.event.findUnique({
         where: { id: eventId },
@@ -522,7 +581,7 @@ export const invitationController = {
       if (!event) throw new NotFoundError('Evento não encontrado.');
 
       const rotated = await invitationService.rotateToken(id);
-      const text = buildWhatsAppInviteText({ guest: invitation.guest, event, link: rotated.link });
+      const text = buildWhatsAppInviteText({ guest, event, link: rotated.link });
 
       await recordAudit({
         action: 'invitation.qrcode_shared',
@@ -532,7 +591,7 @@ export const invitationController = {
         actorName: request.user.name,
         entity: 'Invitation',
         entityId: id,
-        description: `Compartilhamento do convite de "${invitation.guest.fullName}"`,
+        description: `Compartilhamento do convite de "${guest.fullName}"`,
         ip: request.ip,
       });
 
@@ -540,8 +599,8 @@ export const invitationController = {
         text,
         shortText: buildShareText(event, rotated.link),
         link: rotated.link,
-        whatsappUrl: invitation.guest.whatsapp
-          ? `https://wa.me/${invitation.guest.whatsapp.replace('+', '')}?text=${encodeURIComponent(text)}`
+        whatsappUrl: guest.whatsapp
+          ? `https://wa.me/${guest.whatsapp.replace('+', '')}?text=${encodeURIComponent(text)}`
           : null,
       });
     } catch (error) {

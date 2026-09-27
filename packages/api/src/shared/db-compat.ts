@@ -13,6 +13,9 @@ import { env } from '../config/env.js';
  */
 
 export const isSqlite = env.DATABASE_PROVIDER === 'sqlite';
+// `DATABASE_PROVIDER` é derivado da `DATABASE_URL` em `config/env.ts`, então os
+// dois nunca divergem — sem isso, uma URL de produção com provider "sqlite"
+// fazia as funções abaixo pularem a serialização e o Prisma recusar a escrita.
 
 /**
  * Serializa um valor destinado a um campo `String?` que guarda JSON.

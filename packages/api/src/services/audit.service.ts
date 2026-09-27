@@ -1,4 +1,5 @@
-import type { Prisma, Role } from '@prisma/client';
+import type { Prisma } from '@prisma/client';
+import type { Role } from '../config/permissions.js';
 import { prisma } from '../config/prisma.js';
 import { logger } from '../config/logger.js';
 import { toJsonField } from '../shared/db-compat.js';

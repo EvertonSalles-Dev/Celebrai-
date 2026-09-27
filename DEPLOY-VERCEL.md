@@ -47,10 +47,17 @@ O `scripts/build-vercel.mjs` **se auto-localiza** a partir do próprio caminho
 vez de assumir o diretório de trabalho. Assim ele funciona mesmo se o Root
 Directory estiver em `packages/api`, e registra um aviso explícito nesse caso.
 
-O `buildCommand` usa `npm run build:vercel --prefix ../..`: o `--prefix` faz o
-npm encontrar o `package.json` da raiz **antes** de executar o script, o que
-funciona independente do cwd. (Note que `--prefix ..` não serve — o npm o
-resolve como `packages/`, não como a raiz.)
+O `buildCommand` usa `npm run build:vercel` **sem** `--prefix`. O script
+`scripts/build-vercel.mjs` se auto-localiza a partir do próprio caminho e roda
+todos os comandos com o `cwd` na raiz do monorepo — o `--prefix` era
+redundante e, com o Root Directory na raiz, resolvia para `/`
+(`../..` acima de `/vercel/path0`), abortando o build com:
+
+```
+npm error path /package.json
+npm error enoent Could not read package.json
+Error: Command "npm run build:vercel --prefix ../.." exited with 254
+```
 
 > ⚠️ `outputDirectory` e `functions` **não** têm como se defender sozinhos: eles
 > são resolvidos pela Vercel contra o Root Directory, antes de qualquer código
@@ -202,6 +209,31 @@ DATABASE_URL="postgresql://..." npx prisma db seed   # opcional: dados de exempl
 > Não rode `db seed` em produção se não quiser os dados de demonstração — o seed
 > apaga todas as tabelas antes de inserir.
 
+### Criar o usuário de acesso (o seed NÃO roda no build)
+
+Um banco novo (ex.: Neon criado do zero) tem as **tabelas** depois do
+`migrate deploy`, mas **nenhum usuário**. Sem usuário, `prisma.user.findUnique`
+retorna `null` e o login responde sempre **"E-mail ou senha incorretos"** —
+mesmo com a senha certa.
+
+O build da Vercel roda apenas `prisma migrate deploy` (passo 2/4 de
+`scripts/build-vercel.mjs`); ele **nunca** insere usuários.
+
+Para criar **somente** o super admin, sem apagar nada e sem dados de
+demonstração:
+
+```bash
+cd packages/api
+DATABASE_URL="postgresql://..." npm run db:bootstrap-admin
+```
+
+O script (`scripts/bootstrap-admin.mjs`) é **idempotente**: se o e-mail já
+existir, não altera nada (nunca sobrescreve a senha). Use as variáveis
+`SEED_SUPER_ADMIN_EMAIL` / `SEED_SUPER_ADMIN_PASSWORD` (defaults
+`super@celebrai.app` / `SuperAdmin@123`) — troque a senha após o primeiro login.
+
+> Não use `db seed` para isso: ele apaga todas as tabelas antes de inserir.
+
 ---
 
 ## `DATABASE_PROVIDER` na Vercel
@@ -224,6 +256,7 @@ schema de produção — que é o comportamento desejado.
 | `npm run build:local` | Build **+ restaura o Client do `.env`** | Build na sua máquina |
 | `npm run build:web` | Só o frontend | Deploy (é o que a Vercel roda) |
 | `npm run db:bootstrap` | Regenera o Client conforme o `.env` | Após `npm run build` |
+| `npm run db:bootstrap-admin` | Cria **só** o super admin (idempotente, não apaga nada) | Banco novo sem usuários |
 
 ### Por que `build:local` e não `build`
 

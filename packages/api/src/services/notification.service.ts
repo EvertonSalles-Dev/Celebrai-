@@ -1,4 +1,12 @@
-import type { NotificationChannel } from '@prisma/client';
+/**
+ * Canal de notificação.
+ *
+ * Declarado localmente pelo mesmo motivo de `Role` (ver `config/permissions.ts`):
+ * no schema de desenvolvimento os `enum` do Prisma viram `String`, então o tipo
+ * `NotificationChannel` não existe no Client gerado.
+ */
+export type NotificationChannel = 'EMAIL' | 'WHATSAPP' | 'SMS' | 'LINK';
+
 import { prisma } from '../config/prisma.js';
 import { logger } from '../config/logger.js';
 import { toJsonField } from '../shared/db-compat.js';

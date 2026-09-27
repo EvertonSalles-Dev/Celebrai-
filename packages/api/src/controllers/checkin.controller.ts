@@ -486,25 +486,38 @@ export const checkInController = {
 
       if (term.length < 3) return ok(reply, []);
 
+      // A busca é por nome do convidado; o convite é anexado a partir de
+      // `Invitation` (a relação inversa `guest.invitation` não existe no schema
+      // de desenvolvimento — ver `prisma/schema.dev.prisma`), preservando a
+      // mesma forma de resposta que a UI de portaria já consome.
       const guests = await prisma.guest.findMany({
-        where: { eventId, fullName: { contains: term, mode: 'insensitive' } },
+        where: { eventId, fullName: { contains: term } },
         take: 20,
         orderBy: { fullName: 'asc' },
-        include: {
-          invitation: { include: INVITATION_SUMMARY },
-        },
       });
+
+      const invitations = await prisma.invitation.findMany({
+        where: { guestId: { in: guests.map((guest) => guest.id) } },
+        include: INVITATION_SUMMARY,
+      });
+
+      const invitationByGuest = new Map(
+        invitations.map((invitation) => [invitation.guestId, invitation]),
+      );
 
       return ok(
         reply,
-        guests.map((guest) => ({
-          id: guest.id,
-          name: guest.fullName,
-          allowedCompanions: guest.allowedCompanions,
-          status: guest.invitation?.status ?? 'PENDING',
-          attendingCount: guest.invitation?.response?.attendingCount ?? null,
-          checkedInAt: guest.invitation?.checkIns[0]?.createdAt ?? null,
-        })),
+        guests.map((guest) => {
+          const invitation = invitationByGuest.get(guest.id);
+          return {
+            id: guest.id,
+            name: guest.fullName,
+            allowedCompanions: guest.allowedCompanions,
+            status: invitation?.status ?? 'PENDING',
+            attendingCount: invitation?.response?.attendingCount ?? null,
+            checkedInAt: invitation?.checkIns[0]?.createdAt ?? null,
+          };
+        }),
       );
     } catch (error) {
       return handleError(reply, error);

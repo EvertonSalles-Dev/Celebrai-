@@ -5,6 +5,7 @@ import fastifyRateLimit from '@fastify/rate-limit';
 import fastifyMultipart from '@fastify/multipart';
 import fastifyStatic from '@fastify/static';
 import { resolve } from 'node:path';
+// `env` é usado tanto na configuração quanto no hook de diagnóstico (abaixo).
 import { env, corsOrigins, isDev, isOriginAllowed } from './config/env.js';
 import { logger } from './config/logger.js';
 import { disconnectPrisma } from './config/prisma.js';
@@ -149,6 +150,28 @@ export async function buildServer(): Promise<FastifyInstance> {
         message: `Rota não encontrada: ${request.method} ${request.url}`,
       },
     });
+  });
+
+  // -------------------------------------------------------------------------
+  // Diagnóstico de roteamento (serverless)
+  // -------------------------------------------------------------------------
+  //
+  // Na Vercel a função recebe a URL por `rewrites`, e é fácil ela chegar aqui
+  // sem o prefixo `/api` (ou com o caminho capturado na query string). Nesse
+  // caso todas as rotas caem no 404 acima com uma mensagem genérica que não
+  // diz se o problema foi a URL recebida ou o registro das rotas.
+  //
+  // Aqui apenas LOGAMOS o que o Fastify realmente enxergou. Nada é reescrito:
+  // alterar o caminho de uma requisição é responsabilidade do entrypoint
+  // serverless (`api/index.ts`), que tem acesso ao `req.url` original. O log
+  // fica no painel da Vercel (Logs) e resolve o caso sem ambiguidade.
+  app.addHook('onRequest', (request, _reply, done) => {
+    logger.debug(`${request.method} ${request.url}`, {
+      rawUrl: request.raw.url,
+      host: request.headers.host,
+      apiPrefix: env.API_PREFIX,
+    });
+    done();
   });
 
   app.setErrorHandler((error, request, reply) => {

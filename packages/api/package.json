@@ -15,6 +15,7 @@
     "test:watch": "vitest",
     "db:generate": "prisma generate",
     "bootstrap:db": "node scripts/bootstrap-db.mjs",
+    "bootstrap:admin": "node scripts/bootstrap-admin.mjs",
     "set-provider:sqlite": "node scripts/set-provider.mjs sqlite",
     "set-provider:postgresql": "node scripts/set-provider.mjs postgresql",
     "postinstall": "node scripts/bootstrap-db.mjs",

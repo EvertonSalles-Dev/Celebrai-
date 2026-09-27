@@ -52,11 +52,18 @@ export function clearRefreshCookie(reply: FastifyReply): void {
 
 function buildAccessPayload(user: {
   id: string;
-  role: AccessTokenPayload['role'];
+  /** `string` porque no schema de desenvolvimento `Role` é `String` (SQLite). */
+  role: string;
   name: string;
   email: string;
 }): AccessTokenPayload {
-  return { sub: user.id, role: user.role, name: user.name, email: user.email, typ: 'access' };
+  return {
+    sub: user.id,
+    role: user.role as AccessTokenPayload['role'],
+    name: user.name,
+    email: user.email,
+    typ: 'access',
+  };
 }
 
 export const authController = {
@@ -96,7 +103,7 @@ export const authController = {
       await recordAudit({
         action: 'auth.login',
         userId: user.id,
-        actorRole: user.role,
+        actorRole: user.role as AccessTokenPayload['role'],
         actorName: user.name,
         description: 'Login realizado com sucesso',
         ip: request.ip,

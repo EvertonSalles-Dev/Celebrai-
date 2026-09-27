@@ -88,6 +88,11 @@ async function refreshAccessToken(): Promise<boolean> {
       setAccessToken(payload.data.accessToken);
       return true;
     } catch {
+      // 401 do /auth/refresh é o caso normal de sessão expirada; qualquer outra
+      // falha (rede, CORS, 5xx) também cai aqui. Em ambos o refresh não ocorre,
+      // então registrar ajuda a distinguir "sem sessão" de "API inacessível".
+      // eslint-disable-next-line no-console
+      console.warn('[celebrai] Não foi possível renovar a sessão (POST /api/auth/refresh).');
       return false;
     } finally {
       refreshPromise = null;
@@ -179,6 +184,22 @@ export async function requestText(path: string, options: RequestOptions = {}): P
     credentials: 'include',
     signal: options.signal,
   });
+
+  // Renovação transparente do token, igual ao `rawRequest`: sem isso um access
+  // token expirado (15m) fazia o download do CSV falhar com 401 em vez de
+  // renovar a sessão e repetir a requisição.
+  if (response.status === 401 && !options.skipAuthRefresh) {
+    if (await refreshAccessToken()) {
+      return requestText(path, { ...options, skipAuthRefresh: true });
+    }
+
+    setAccessToken(null);
+    onSessionExpired?.();
+    throw new ApiRequestError(401, {
+      code: 'SESSION_EXPIRED',
+      message: 'Sua sessão expirou. Faça login novamente.',
+    });
+  }
 
   if (!response.ok) {
     throw new ApiRequestError(response.status, await parseError(response));

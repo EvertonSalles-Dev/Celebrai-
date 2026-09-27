@@ -43,6 +43,21 @@ const envSchema = z.object({
   CHECKIN_RATE_LIMIT_MAX: z.coerce.number().int().positive().default(120),
   AUTH_RATE_LIMIT_MAX: z.coerce.number().int().positive().default(10),
 
+  /**
+   * Origens extras autorizadas no CORS, separadas por vírgula.
+   *
+   * `CORS_ORIGINS` já cobre o desenvolvimento e os domínios que a Vercel injeta
+   * automaticamente (`VERCEL_URL` / `VERCEL_PROJECT_PRODUCTION_URL`). Esta
+   * variável existe para o caso em que o FRONT é servido de um host diferente do
+   * back — domínio próprio, CDN ou outro projeto na Vercel.
+   *
+   * Sem a origem correta aqui, o navegador bloqueia o login antes mesmo de a
+   * requisição chegar: "blocked by CORS policy" / "Origem não autorizada pelo
+   * CORS". Aceita valores exatos e curingas simples, ex.:
+   *   EXTRA_CORS_ORIGINS=https://celebrai.app,https://*.celebrai.app
+   */
+  EXTRA_CORS_ORIGINS: z.string().default(''),
+
   MAIL_DRIVER: z.enum(['smtp', 'disabled']).default('disabled'),
   MAIL_FROM: z.string().default('Celebrai <no-reply@celebrai.app>'),
   SMTP_HOST: z.string().optional(),
@@ -93,8 +108,8 @@ const DATABASE_URL_ALIASES = [
 function applyDatabaseUrlAlias(): void {
   const current = process.env.DATABASE_URL;
 
-  // Já é uma URL PostgreSQL válida — nada a fazer.
-  if (current && /^postgres(ql)?:\/\//.test(current.trim())) return;
+  // Já é uma URL de banco válida (Postgres ou SQLite) — nada a fazer.
+  if (current && /^(postgres(ql)?|file):/.test(current.trim())) return;
 
   const alias = DATABASE_URL_ALIASES.find((key) => {
     const value = process.env[key];
@@ -104,8 +119,52 @@ function applyDatabaseUrlAlias(): void {
   if (alias) process.env.DATABASE_URL = process.env[alias];
 }
 
+/**
+ * Mantém `DATABASE_PROVIDER` coerente com a `DATABASE_URL` em uso.
+ *
+ * O Prisma Client é gerado para UM provider, mas o `db-compat` e outros pontos
+ * do código decidem o formato dos campos a partir de `DATABASE_PROVIDER`. Quando
+ * os dois divergem, o erro aparece longe da causa:
+ *
+ *   url de produção (postgresql) + DATABASE_PROVIDER=sqlite
+ *     → `toJsonField` deixa de serializar e o Prisma recusa a escrita
+ *     → 500 INTERNAL_ERROR no login (auditoria e criação de sessão).
+ *
+ * A `DATABASE_URL` é a fonte da verdade porque é ela que o Prisma usa de fato:
+ *  - `file:`             → sqlite
+ *  - `postgres://`/`postgresql://` → postgresql
+ *  - `mysql://`          → mysql
+ *
+ * Sem URL definida, o valor do ambiente é mantido (a validação do Zod já
+ * garante que `DATABASE_URL` existe).
+ */
+function applyProviderFromUrl(): void {
+  const url = process.env.DATABASE_URL?.trim();
+  if (!url) return;
+
+  const provider = /^file:/.test(url)
+    ? 'sqlite'
+    : /^mysql:\/\//.test(url)
+      ? 'mysql'
+      : /^postgres(ql)?:\/\//.test(url)
+        ? 'postgresql'
+        : null;
+
+  if (!provider) return;
+
+  if (process.env.DATABASE_PROVIDER !== provider) {
+    console.warn(
+      `[celebrai] DATABASE_PROVIDER ajustado para "${provider}" conforme a DATABASE_URL ` +
+      `(valor anterior: "${process.env.DATABASE_PROVIDER ?? '(ausente)'}").`,
+    );
+  }
+
+  process.env.DATABASE_PROVIDER = provider;
+}
+
 function loadEnv(): AppEnv {
   applyDatabaseUrlAlias();
+  applyProviderFromUrl();
 
   const parsed = envSchema.safeParse(process.env);
 
@@ -227,9 +286,16 @@ export const appUrl = resolveAppUrl();
  * uma lista fixa nunca casa e o login falha com "Origem não autorizada pelo
  * CORS". As variáveis já são fornecidas pelo ambiente — não é preciso
  * configurá-las no painel.
+ *
+ * `EXTRA_CORS_ORIGINS` entra logo depois de `CORS_ORIGINS` — é o escape para
+ * servir o front de um host diferente do back (domínio próprio/CDN).
  */
 function resolveCorsOrigins(): string[] {
   const configured = env.CORS_ORIGINS.split(',')
+    .map((o) => o.trim())
+    .filter(Boolean);
+
+  const extras = env.EXTRA_CORS_ORIGINS.split(',')
     .map((o) => o.trim())
     .filter(Boolean);
 
@@ -237,7 +303,7 @@ function resolveCorsOrigins(): string[] {
     .filter((host): host is string => Boolean(host))
     .map((host) => `https://${host}`);
 
-  return [...new Set([...configured, ...vercelHosts])];
+  return [...new Set([...configured, ...extras, ...vercelHosts])];
 }
 
 export const corsOrigins = resolveCorsOrigins();
@@ -245,14 +311,26 @@ export const corsOrigins = resolveCorsOrigins();
 /**
  * Verifica se uma origem está autorizada.
  *
- * A comparação é exata contra `corsOrigins`. Não há suporte a wildcard porque
- * as URLs de preview da Vercel **não** são subdomínios: o formato é
- * `projeto-hash-time-projeto.vercel.app`, ou seja, um único label DNS com
- * hífens. Um padrão `*.dominio.com` nunca casaria com elas.
+ * A comparação é exata contra `corsOrigins`, com uma exceção: entradas que
+ * contenham `*` são tratadas como curinga simples (`https://*.dominio.com`).
  *
- * Essas URLs já são liberadas automaticamente via `VERCEL_URL` em
- * `resolveCorsOrigins`, que é o mecanismo correto para o caso.
+ * Os curingas existem porque as URLs de preview da Vercel **não** são
+ * subdomínios: o formato é `projeto-hash-time-projeto.vercel.app`, ou seja, um
+ * único label DNS com hífens — `*.dominio.com` nunca casaria com elas. Essas
+ * URLs já são liberadas automaticamente via `VERCEL_URL` em
+ * `resolveCorsOrigins`, que é o mecanismo correto para o caso; o curinga serve
+ * para domínios próprios com muitos subdomínios (ex.: `https://*.celebrai.app`).
+ *
+ * A lista é estritamente explícita também em desenvolvimento: para acessar o
+ * dev server por outro IP/host (ex.: `http://192.168.56.1:5173`), adicione-o
+ * a `CORS_ORIGINS` no `.env`.
  */
 export function isOriginAllowed(origin: string): boolean {
-  return corsOrigins.includes(origin);
+  return corsOrigins.some((allowed) => {
+    if (allowed === origin) return true;
+    if (!allowed.includes('*')) return false;
+
+    const [prefix = '', suffix = ''] = allowed.split('*');
+    return origin.startsWith(prefix) && origin.endsWith(suffix) && origin.length >= allowed.length - 1;
+  });
 }

@@ -1,5 +1,5 @@
 import { randomBytes, randomUUID } from 'node:crypto';
-import type { Role } from '@prisma/client';
+import type { Role } from '../config/permissions.js';
 import { prisma } from '../config/prisma.js';
 import { env } from '../config/env.js';
 import { hashToken } from '../shared/tokens.js';

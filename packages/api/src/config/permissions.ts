@@ -1,4 +1,13 @@
-import type { Role } from '@prisma/client';
+/**
+ * Papéis de acesso.
+ *
+ * O tipo é declarado AQUI (e não importado de `@prisma/client`) porque nos dois
+ * schemas o campo `role` é `String`: no schema de desenvolvimento os `enum` do
+ * Prisma viram `String` (SQLite não os suporta), então `Role` não existe no
+ * Client gerado. Manter a fonte da verdade neste módulo deixa o código de
+ * domínio independente de qual schema gerou o Client.
+ */
+export type Role = 'SUPER_ADMIN' | 'ADMIN' | 'RECEPTIONIST';
 
 export const ROLES = {
   SUPER_ADMIN: 'SUPER_ADMIN',
@@ -14,7 +23,7 @@ const ROLE_WEIGHT: Record<Role, number> = {
 };
 
 export function roleAtLeast(role: Role, minimum: Role): boolean {
-  return ROLE_WEIGHT[role] >= ROLE_WEIGHT[minimum];
+  return (ROLE_WEIGHT[role] ?? 0) >= (ROLE_WEIGHT[minimum] ?? 0);
 }
 
 export function isSuperAdmin(role: Role): boolean {

@@ -92,6 +92,8 @@ function toGuestView(guest: {
   } | null;
 }) {
   return {
+    // `id` é obrigatório na UI (seleção, edição e exclusão usam este campo).
+    id: guest.id,
     fullName: guest.fullName,
     email: guest.email,
     whatsapp: guest.whatsapp,
@@ -141,15 +143,30 @@ export const guestController = {
       if (query.checkIn === 'IN') invitationFilter.checkIns = { some: {} };
       if (query.checkIn === 'OUT') invitationFilter.checkIns = { none: {} };
 
+      // O filtro por status/check-in vive na tabela `invitations` (a coluna é
+      // `invitations.guestId`). Filtramos os ids primeiro e usamos `id: { in }`
+      // em vez de `invitation: {...}`, porque a relação inversa `guest.invitation`
+      // não existe no schema de desenvolvimento (ver `prisma/schema.dev.prisma`).
+      const hasInvitationFilter = Object.keys(invitationFilter).length > 0;
+
+      const matchingGuestIds = hasInvitationFilter
+        ? (
+            await prisma.invitation.findMany({
+              where: invitationFilter,
+              select: { guestId: true },
+            })
+          ).map((row) => row.guestId)
+        : null;
+
       const where: Prisma.GuestWhereInput = {
         eventId,
         ...(query.partyId ? { partyId: query.partyId } : {}),
-        ...(Object.keys(invitationFilter).length > 0 ? { invitation: invitationFilter } : {}),
+        ...(matchingGuestIds ? { id: { in: matchingGuestIds } } : {}),
         ...(query.search
           ? {
             OR: [
-              { fullName: { contains: query.search, mode: 'insensitive' } },
-              { email: { contains: query.search, mode: 'insensitive' } },
+              { fullName: { contains: query.search } },
+              { email: { contains: query.search } },
               { whatsapp: { contains: query.search } },
             ],
           }
@@ -169,18 +186,25 @@ export const guestController = {
         orderBy,
         include: {
           party: { select: { id: true, name: true } },
-          invitation: {
-            include: {
-              response: true,
-              checkIns: { orderBy: { createdAt: 'desc' } },
-            },
-          },
         },
       });
 
+      // Convites anexados em uma segunda consulta (mesma forma de resposta).
+      const invitations = await prisma.invitation.findMany({
+        where: { guestId: { in: guests.map((guest) => guest.id) } },
+        include: {
+          response: true,
+          checkIns: { orderBy: { createdAt: 'desc' } },
+        },
+      });
+
+      const invitationByGuest = new Map(
+        invitations.map((invitation) => [invitation.guestId, invitation]),
+      );
+
       return ok(
         reply,
-        guests.map((g) => toGuestView(g as never)),
+        guests.map((g) => toGuestView({ ...g, invitation: invitationByGuest.get(g.id) ?? null })),
         paginationMeta(query.page, query.perPage, total),
       );
     } catch (error) {
@@ -198,18 +222,20 @@ export const guestController = {
         where: { id, eventId },
         include: {
           party: { select: { id: true, name: true } },
-          invitation: {
-            include: {
-              response: true,
-              checkIns: { orderBy: { createdAt: 'desc' } },
-            },
-          },
         },
       });
 
       if (!guest) throw new NotFoundError('Convidado não encontrado.');
 
-      return ok(reply, toGuestView(guest as never));
+      const invitation = await prisma.invitation.findUnique({
+        where: { guestId: guest.id },
+        include: {
+          response: true,
+          checkIns: { orderBy: { createdAt: 'desc' } },
+        },
+      });
+
+      return ok(reply, toGuestView({ ...guest, invitation }));
     } catch (error) {
       return handleError(reply, error);
     }
@@ -496,21 +522,36 @@ export const guestController = {
       const query = request.query as { status?: string; format?: string };
       const format = query.format === 'json' ? 'json' : 'csv';
 
+      // Filtro por status vive em `invitations` — resolvido por `guestId`.
+      const statusGuestIds =
+        query.status && query.status !== 'ALL'
+          ? (
+              await prisma.invitation.findMany({
+                where: { status: query.status },
+                select: { guestId: true },
+              })
+            ).map((row) => row.guestId)
+          : null;
+
       const guests = await prisma.guest.findMany({
         where: {
           eventId,
-          ...(query.status && query.status !== 'ALL'
-            ? { invitation: { status: query.status as never } }
-            : {}),
+          ...(statusGuestIds ? { id: { in: statusGuestIds } } : {}),
         },
         orderBy: { fullName: 'asc' },
         include: {
           party: { select: { name: true } },
-          invitation: {
-            include: { response: true, checkIns: { orderBy: { createdAt: 'desc' }, take: 1 } },
-          },
         },
       });
+
+      const invitations = await prisma.invitation.findMany({
+        where: { guestId: { in: guests.map((guest) => guest.id) } },
+        include: { response: true, checkIns: { orderBy: { createdAt: 'desc' }, take: 1 } },
+      });
+
+      const invitationByGuest = new Map(
+        invitations.map((invitation) => [invitation.guestId, invitation]),
+      );
 
       const rows = guests.map((guest) => ({
         nome: guest.fullName,
@@ -518,9 +559,10 @@ export const guestController = {
         whatsapp: guest.whatsapp ?? '',
         quantidade_permitida: guest.allowedCompanions,
         grupo: guest.party?.name ?? '',
-        status: guest.invitation?.status ?? 'SEM_CONVITE',
-        checkin_em: guest.invitation?.checkIns[0]?.createdAt?.toISOString() ?? '',
-        pessoas_confirmadas: guest.invitation?.response?.attendingCount ?? '',
+        status: invitationByGuest.get(guest.id)?.status ?? 'SEM_CONVITE',
+        checkin_em:
+          invitationByGuest.get(guest.id)?.checkIns[0]?.createdAt?.toISOString() ?? '',
+        pessoas_confirmadas: invitationByGuest.get(guest.id)?.response?.attendingCount ?? '',
       }));
 
       await recordAudit({
