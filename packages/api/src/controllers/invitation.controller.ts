@@ -11,6 +11,7 @@ import { whatsappProvider } from '../services/providers/whatsapp.provider.js';
 import { recordAudit } from '../services/audit.service.js';
 import { sendInvitationsSchema } from '../schemas/index.js';
 import { formatBrazilianPhone } from '../shared/brazil.js';
+import { parseInvitationStatus } from '../shared/invitation-status.js';
 import { formatLongDate } from '../shared/datetime.js';
 import {
   buildInviteEmailHtml,
@@ -33,7 +34,7 @@ import {
 /**
  * O convidado NÃO entra como `include`: a relação é declarada sem campo inverso
  * em `Guest` (ver `prisma/schema.dev.prisma`), então os dados são anexados com
- * uma segunda consulta por `guestId` — ver `attachGuest`/`loadGuestsById`.
+ * uma segunda consulta por `guestId` — ver `loadGuestsById`.
  */
 const GUEST_SUMMARY_SELECT = {
   id: true,
@@ -104,10 +105,12 @@ export const invitationController = {
 
       const guestsById = new Map(guests.map((guest) => [guest.id, guest]));
 
+      const statusFilter = parseInvitationStatus(query.status);
+
       const invitations = await prisma.invitation.findMany({
         where: {
           guestId: { in: guests.map((guest) => guest.id) },
-          ...(query.status && query.status !== 'ALL' ? { status: query.status as never } : {}),
+          ...(statusFilter ? { status: statusFilter } : {}),
         },
         orderBy: { createdAt: 'desc' },
         include: {

@@ -1,6 +1,7 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import type { Prisma } from '@prisma/client';
 import { prisma } from '../config/prisma.js';
+import { parseInvitationStatus } from '../shared/invitation-status.js';
 import { env } from '../config/env.js';
 import { created, handleError, noContent, ok, paginationMeta, toSkipTake } from '../shared/http.js';
 import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from '../shared/errors.js';
@@ -523,15 +524,20 @@ export const guestController = {
       const format = query.format === 'json' ? 'json' : 'csv';
 
       // Filtro por status vive em `invitations` — resolvido por `guestId`.
-      const statusGuestIds =
-        query.status && query.status !== 'ALL'
-          ? (
-              await prisma.invitation.findMany({
-                where: { status: query.status },
-                select: { guestId: true },
-              })
-            ).map((row) => row.guestId)
-          : null;
+      //
+      // `parseInvitationStatus` valida contra a lista conhecida e devolve o tipo
+      // literal, que casa tanto com o enum do Postgres quanto com a `String` do
+      // SQLite (ver comentário no topo do arquivo).
+      const statusFilter = parseInvitationStatus(query.status);
+
+      const statusGuestIds = statusFilter
+        ? (
+            await prisma.invitation.findMany({
+              where: { status: statusFilter },
+              select: { guestId: true },
+            })
+          ).map((row) => row.guestId)
+        : null;
 
       const guests = await prisma.guest.findMany({
         where: {
