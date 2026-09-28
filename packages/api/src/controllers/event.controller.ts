@@ -3,7 +3,7 @@ import type { Prisma } from '@prisma/client';
 import { prisma } from '../config/prisma.js';
 import { uniqueSlug } from '../shared/tokens.js';
 import { combineDateAndTime } from '../shared/datetime.js';
-import { toStringListField } from '../shared/db-compat.js';
+import { toJsonField } from '../shared/db-compat.js';
 import { created, handleError, noContent, ok, paginationMeta, toSkipTake } from '../shared/http.js';
 import { ForbiddenError, NotFoundError } from '../shared/errors.js';
 import {
@@ -56,12 +56,10 @@ function toEventData(input: Record<string, unknown>): Prisma.EventUncheckedUpdat
     if (input[key] !== undefined) data[key] = input[key];
   }
 
-  // `galleryImages` é `String[]` no Postgres e `String?` (JSON) no SQLite de
-  // desenvolvimento — `toStringListField` normaliza para o provider ativo.
-  // Passar o array cru quebrava a criação de eventos com
-  // "Argument galleryImages: Invalid value provided. Expected String or Null".
+  // `galleryImages` é `String?` (JSON textual) em todos os bancos.
+  // Usamos `toJsonField` para garantir que o array seja serializado em string.
   if (input.galleryImages !== undefined) {
-    data.galleryImages = toStringListField(input.galleryImages as string[]);
+    data.galleryImages = toJsonField(input.galleryImages);
   }
 
   if (eventDate) {

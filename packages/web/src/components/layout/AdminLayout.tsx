@@ -44,9 +44,9 @@ export function AdminLayout() {
   const isReceptionist = user?.role === 'RECEPTIONIST';
 
   const handleLogout = async () => {
+    await authApi.logout();
     queryClient.clear();
     navigate('/login', { replace: true });
-    await authApi.logout();
   };
 
   const navItems = isReceptionist

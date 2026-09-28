@@ -35,9 +35,9 @@ export function CheckInHomePage() {
   const { data: events, isLoading, error, refetch } = useCheckInEvents();
 
   const handleLogout = async () => {
+    await authApi.logout();
     queryClient.clear();
     navigate('/login', { replace: true });
-    await authApi.logout();
   };
 
   const isReceptionist = user?.role === 'RECEPTIONIST';
