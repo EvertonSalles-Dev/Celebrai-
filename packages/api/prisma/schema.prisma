@@ -1,16 +1,3 @@
-// ============================================================================
-// Celebrai — Prisma schema
-// ----------------------------------------------------------------------------
-// Modelo de dados para gestão de convites, RSVP, QR Code e check-in.
-//
-// Provider: por padrão `postgresql` (produção). Ele pode ser sobrescrito para
-// `sqlite` em desenvolvimento local através da variável DATABASE_PROVIDER,
-// permitindo rodar o projeto sem Docker/Postgres instalado.
-//
-// Para trocar de provider o script `scripts/set-provider.mjs` reescreve a
-// linha `provider = ...` abaixo antes de rodar as migrations.
-// ============================================================================
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -20,15 +7,349 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-/// ---------------------------------------------------------------------------
-/// Enums
-/// ---------------------------------------------------------------------------
+model User {
+  id            String               @id @default(cuid())
+  name          String
+  email         String               @unique
+  passwordHash  String
+  role          Role                 @default(ADMIN)
+  status        UserStatus           @default(ACTIVE)
+  phone         String?
+  lastLoginAt   DateTime?
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+  auditLogs     AuditLog[]
+  checkIns      CheckIn[]
+  memberships   EventMember[]
+  events        Event[]              @relation("EventOwner")
+  invitations   InvitationResponse[] @relation("ResponseActor")
+  refreshTokens RefreshToken[]
+
+  @@index([role])
+  @@map("users")
+}
+
+/// Refresh token rotativo (armazenado como hash, nunca em claro).
+model RefreshToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  /// agrupa a família de tokens para detecção de reuso
+  family    String
+  userAgent String?
+  ip        String?
+  revokedAt DateTime?
+  expiresAt DateTime
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([family])
+  @@map("refresh_tokens")
+}
+
+/// Vínculo de um usuário (ex.: RECEPTIONIST) a um evento específico.
+model EventMember {
+  id        String   @id @default(cuid())
+  eventId   String
+  userId    String
+  role      Role     @default(RECEPTIONIST)
+  createdAt DateTime @default(now())
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, userId])
+  @@index([userId])
+  @@map("event_members")
+}
+
+model Event {
+  id               String         @id @default(cuid())
+  slug             String         @unique
+  ownerId          String
+  status           EventStatus    @default(DRAFT)
+  /// Identificação do evento
+  /// "Casamento de João & Maria"
+  title            String
+  /// "João"
+  coupleNameA      String?
+  /// "Maria"
+  coupleNameB      String?
+  /// "João & Maria"
+  hostsName        String?
+  /// Foto/tema
+  coverImageUrl    String?
+  /// URLs da galeria de fotos
+  galleryImages    String?
+  /// Mensagens
+  welcomeMessage   String?
+  /// Mensagem do convite
+  inviteMessage    String?
+  /// Mensagem dos noivos
+  couplesMessage   String?
+  dressCode        String?
+  giftListUrl      String?
+  giftListNotes    String?
+  ceremonyInfo     String?
+  receptionInfo    String?
+  /// Datas
+  eventDate        DateTime
+  /// "19:00"
+  startTime        String
+  endTime          String?
+  /// Regras
+  rsvpDeadline     DateTime?
+  allowCompanions  Boolean        @default(true)
+  allowShareInvite Boolean        @default(false)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  auditLogs        AuditLog[]
+  checkIns         CheckIn[]
+  members          EventMember[]
+  owner            User           @relation("EventOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  guests           Guest[]
+  notifications    Notification[]
+  parties          Party[]
+  venue            Venue?
+
+  @@index([ownerId])
+  @@index([status])
+  @@map("events")
+}
+
+/// Informações completas do local do evento.
+model Venue {
+  id             String   @id @default(cuid())
+  eventId        String   @unique
+  name           String
+  /// "Salão de festas", "Espaço ao ar livre"...
+  type           String?
+  address        String
+  number         String?
+  complement     String?
+  neighborhood   String?
+  city           String
+  state          String
+  zipCode        String?
+  country        String   @default("Brasil")
+  referencePoint String?
+  googleMapsUrl  String?
+  wazeUrl        String?
+  latitude       Float?
+  longitude      Float?
+  parkingInfo    String?
+  extraInfo      String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  event          Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@map("venues")
+}
+
+/// Grupo/família usado para agrupar convidados.
+model Party {
+  id        String   @id @default(cuid())
+  eventId   String
+  name      String
+  color     String?
+  createdAt DateTime @default(now())
+  guests    Guest[]
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, name])
+  @@map("parties")
+}
+
+model Guest {
+  id                String      @id @default(cuid())
+  eventId           String
+  partyId           String?
+  fullName          String
+  email             String?
+  whatsapp          String?
+  /// Quantidade máxima de pessoas autorizadas (convidado + acompanhantes)
+  allowedCompanions Int         @default(1)
+  notes             String?
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  event             Event       @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  party             Party?      @relation(fields: [partyId], references: [id])
+  invitation        Invitation?
+
+  @@index([eventId])
+  @@index([eventId, fullName])
+  @@map("guests")
+}
+
+/// Convite único e individual. Guarda apenas o hash do token público.
+model Invitation {
+  id              String              @id @default(cuid())
+  guestId         String              @unique
+  /// Hash SHA-256 do token público (o token em claro só existe no link enviado)
+  tokenHash       String              @unique
+  /// Prefixo curto do token, usado para busca em logs sem expor o segredo
+  tokenPrefix     String
+  status          InvitationStatus    @default(PENDING)
+  sentAt          DateTime?
+  sentVia         String?
+  respondedAt     DateTime?
+  cancelledAt     DateTime?
+  cancelledReason String?
+  /// ---------------------------------------------------------------------
+  /// QR Code (credencial digital) — gerado apenas após confirmação
+  /// ---------------------------------------------------------------------
+  /// Hash do código, usado para o lookup no check-in (índice único).
+  qrCodeHash      String?             @unique
+  /// Valor do código do QR.
+  ///
+  /// É um IDENTIFICADOR OPAQUE de credencial (equivalente a um número de
+  /// ingresso), não um segredo de autenticação como uma senha: o convidado
+  /// precisa reexibir o mesmo código. Por isso é armazenado de forma
+  /// recuperável — mas NUNCA contém CPF nem qualquer dado pessoal.
+  qrCodeValue     String?
+  /// Código completo para exibição/auditoria (mesmo valor de `qrCodeValue`).
+  qrCodePrefix    String?
+  qrCodeIssuedAt  DateTime?
+  qrRevokedAt     DateTime?
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  checkIns        CheckIn[]
+  response        InvitationResponse?
+  guest           Guest               @relation(fields: [guestId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@map("invitations")
+}
+
+/// Dados preenchidos pelo convidado no ato da resposta (RSVP).
+model InvitationResponse {
+  id             String     @id @default(cuid())
+  invitationId   String     @unique
+  fullName       String
+  /// CPF armazenado cifrado/hasheado — nunca exposto integralmente no painel
+  cpfHash        String?
+  cpfMasked      String?
+  email          String?
+  phone          String?
+  /// Quantidade de pessoas que irão comparecer (<= allowedCompanions)
+  attendingCount Int
+  /// [{ "name": "Maria", "document": null }]
+  companions     String?
+  message        String?
+  ip             String?
+  userAgent      String?
+  /// usuário que registrou (quando registro manual pelo admin)
+  actorId        String?
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+  actor          User?      @relation("ResponseActor", fields: [actorId], references: [id])
+  invitation     Invitation @relation(fields: [invitationId], references: [id], onDelete: Cascade)
+
+  @@map("invitation_responses")
+}
+
+model CheckIn {
+  id                      String        @id @default(cuid())
+  eventId                 String
+  invitationId            String
+  guestId                 String?
+  method                  CheckInMethod @default(QR_CODE)
+  peopleCount             Int           @default(1)
+  /// Usuário responsável pelo check-in (recepcionista/admin)
+  operatorId              String?
+  /// "Recepção 01"
+  operatorLabel           String?
+  /// Token/prefixo utilizado (auditoria) — nunca o token em claro
+  tokenPrefix             String?
+  ip                      String?
+  userAgent               String?
+  notes                   String?
+  /// Marca check-ins liberados manualmente após alerta de duplicidade
+  overriddenFromCheckInId String?
+  createdAt               DateTime      @default(now())
+  event                   Event         @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  invitation              Invitation    @relation(fields: [invitationId], references: [id], onDelete: Cascade)
+  operator                User?         @relation(fields: [operatorId], references: [id])
+
+  @@index([eventId])
+  @@index([invitationId])
+  @@index([createdAt])
+  @@map("check_ins")
+}
+
+model Notification {
+  id           String              @id @default(cuid())
+  eventId      String?
+  guestId      String?
+  invitationId String?
+  channel      NotificationChannel
+  status       NotificationStatus  @default(QUEUED)
+  to           String?
+  subject      String?
+  body         String?
+  provider     String?
+  error        String?
+  sentAt       DateTime?
+  metadata     String?
+  createdAt    DateTime            @default(now())
+  event        Event?              @relation(fields: [eventId], references: [id])
+
+  @@index([eventId])
+  @@index([status])
+  @@map("notifications")
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  userId      String?
+  eventId     String?
+  actorRole   Role?
+  actorName   String?
+  /// "guest.created", "invitation.sent", "checkin.validated"...
+  action      String
+  /// "Guest" | "Invitation" | ...
+  entity      String?
+  entityId    String?
+  description String?
+  metadata    String?
+  ip          String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+  event       Event?   @relation(fields: [eventId], references: [id])
+  user        User?    @relation(fields: [userId], references: [id])
+
+  @@index([eventId])
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+/// Registro de consentimento LGPD do convidado.
+model DataConsent {
+  id           String   @id @default(cuid())
+  invitationId String
+  guestId      String?
+  /// "rsvp", "event_access"...
+  purpose      String
+  granted      Boolean  @default(true)
+  textVersion  String   @default("1.0")
+  ip           String?
+  userAgent    String?
+  createdAt    DateTime @default(now())
+
+  @@index([invitationId])
+  @@map("data_consents")
+}
 
 /// Nível de acesso do usuário administrativo.
 enum Role {
-  SUPER_ADMIN /// Gerencia a plataforma, usuários e visualiza todos os eventos
-  ADMIN /// Administrador do evento (noivos/organizador)
-  RECEPTIONIST /// Somente controle de entrada / leitura de QR Code
+  /// Gerencia a plataforma, usuários e visualiza todos os eventos
+  SUPER_ADMIN
+  /// Administrador do evento (noivos/organizador)
+  ADMIN
+  /// Somente controle de entrada / leitura de QR Code
+  RECEPTIONIST
 }
 
 enum UserStatus {
@@ -38,11 +359,16 @@ enum UserStatus {
 
 /// Ciclo de vida do convite.
 enum InvitationStatus {
-  PENDING /// Convite criado, ainda não respondido
-  CONFIRMED /// Presença confirmada, possui QR Code válido
-  DECLINED /// Convidado informou que não poderá comparecer
-  CHECKED_IN /// Convidado já entrou no evento
-  CANCELLED /// Convite cancelado pelo administrador
+  /// Convite criado, ainda não respondido
+  PENDING
+  /// Presença confirmada, possui QR Code válido
+  CONFIRMED
+  /// Convidado informou que não poderá comparecer
+  DECLINED
+  /// Convidado já entrou no evento
+  CHECKED_IN
+  /// Convite cancelado pelo administrador
+  CANCELLED
 }
 
 enum EventStatus {
@@ -54,8 +380,10 @@ enum EventStatus {
 
 /// Tipo de check-in registrado.
 enum CheckInMethod {
-  QR_CODE /// Leitura normal do QR Code
-  MANUAL /// Autorização manual do administrador (após alerta de duplicidade)
+  /// Leitura normal do QR Code
+  QR_CODE
+  /// Autorização manual do administrador (após alerta de duplicidade)
+  MANUAL
 }
 
 enum NotificationChannel {
@@ -69,384 +397,4 @@ enum NotificationStatus {
   QUEUED
   SENT
   FAILED
-}
-
-/// ---------------------------------------------------------------------------
-/// Usuários e sessões
-/// ---------------------------------------------------------------------------
-
-model User {
-  id            String     @id @default(cuid())
-  name          String
-  email         String     @unique
-  passwordHash  String
-  role          Role       @default(ADMIN)
-  status        UserStatus @default(ACTIVE)
-  phone         String?
-  lastLoginAt   DateTime?
-
-  /// Eventos que o usuário administra (ADMIN). SUPER_ADMIN enxerga todos.
-  events        Event[]              @relation("EventOwner")
-  memberships   EventMember[]
-  refreshTokens RefreshToken[]
-  checkIns      CheckIn[]
-  auditLogs     AuditLog[]
-  invitations   InvitationResponse[] @relation("ResponseActor")
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([role])
-  @@map("users")
-}
-
-/// Refresh token rotativo (armazenado como hash, nunca em claro).
-model RefreshToken {
-  id        String   @id @default(cuid())
-  userId    String
-  tokenHash String   @unique
-  family    String /// agrupa a família de tokens para detecção de reuso
-  userAgent String?
-  ip        String?
-  revokedAt DateTime?
-  expiresAt DateTime
-  createdAt DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@index([family])
-  @@map("refresh_tokens")
-}
-
-/// Vínculo de um usuário (ex.: RECEPTIONIST) a um evento específico.
-model EventMember {
-  id      String @id @default(cuid())
-  eventId String
-  userId  String
-  role    Role   @default(RECEPTIONIST)
-
-  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
-
-  @@unique([eventId, userId])
-  @@index([userId])
-  @@map("event_members")
-}
-
-/// ---------------------------------------------------------------------------
-/// Evento e local
-/// ---------------------------------------------------------------------------
-
-model Event {
-  id     String      @id @default(cuid())
-  slug   String      @unique
-  ownerId String
-  status EventStatus @default(DRAFT)
-
-  /// Identificação do evento
-  title         String /// "Casamento de João & Maria"
-  coupleNameA   String? /// "João"
-  coupleNameB   String? /// "Maria"
-  hostsName     String? /// "João & Maria"
-  /// Foto/tema
-  coverImageUrl String?
-  galleryImages String? /// URLs da galeria de fotos
-  /// Mensagens
-  welcomeMessage      String?
-  inviteMessage       String? /// Mensagem do convite
-  couplesMessage      String? /// Mensagem dos noivos
-  dressCode           String?
-  giftListUrl         String?
-  giftListNotes       String?
-  ceremonyInfo        String?
-  receptionInfo       String?
-  /// Datas
-  eventDate   DateTime
-  startTime   String /// "19:00"
-  endTime     String?
-  /// Regras
-  rsvpDeadline   DateTime?
-  allowCompanions Boolean @default(true)
-  allowShareInvite Boolean @default(false)
-
-  owner   User          @relation("EventOwner", fields: [ownerId], references: [id], onDelete: Cascade)
-  venue   Venue?
-  guests  Guest[]
-  parties Party[]
-  checkIns CheckIn[]
-  members  EventMember[]
-  auditLogs AuditLog[]
-  notifications Notification[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([ownerId])
-  @@index([status])
-  @@map("events")
-}
-
-/// Informações completas do local do evento.
-model Venue {
-  id      String @id @default(cuid())
-  eventId String @unique
-
-  name         String
-  type         String? /// "Salão de festas", "Espaço ao ar livre"...
-  address      String
-  number       String?
-  complement   String?
-  neighborhood String?
-  city         String
-  state        String
-  zipCode      String?
-  country      String  @default("Brasil")
-  referencePoint String?
-  googleMapsUrl String?
-  wazeUrl       String?
-  latitude      Float?
-  longitude     Float?
-  parkingInfo   String?
-  extraInfo     String?
-
-  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@map("venues")
-}
-
-/// ---------------------------------------------------------------------------
-/// Convidados, convites e respostas
-/// ---------------------------------------------------------------------------
-
-/// Grupo/família usado para agrupar convidados.
-model Party {
-  id      String @id @default(cuid())
-  eventId String
-  name    String
-  color   String?
-
-  event     Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  guests    Guest[]
-
-  createdAt DateTime @default(now())
-
-  @@unique([eventId, name])
-  @@map("parties")
-}
-
-model Guest {
-  id      String @id @default(cuid())
-  eventId String
-  partyId String?
-
-  fullName    String
-  email       String?
-  whatsapp    String?
-  /// Quantidade máxima de pessoas autorizadas (convidado + acompanhantes)
-  allowedCompanions Int @default(1)
-  notes       String?
-
-  event Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  party Party? @relation(fields: [partyId], references: [id], onDelete: SetNull)
-  invitation Invitation?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([eventId])
-  @@index([eventId, fullName])
-  @@map("guests")
-}
-
-/// Convite único e individual. Guarda apenas o hash do token público.
-model Invitation {
-  id      String @id @default(cuid())
-  guestId String @unique
-
-  /// Hash SHA-256 do token público (o token em claro só existe no link enviado)
-  tokenHash String @unique
-  /// Prefixo curto do token, usado para busca em logs sem expor o segredo
-  tokenPrefix String
-  status    InvitationStatus @default(PENDING)
-
-  sentAt         DateTime?
-  sentVia        String?
-  respondedAt    DateTime?
-  cancelledAt    DateTime?
-  cancelledReason String?
-
-  /// ---------------------------------------------------------------------
-  /// QR Code (credencial digital) — gerado apenas após confirmação
-  /// ---------------------------------------------------------------------
-  /// Hash do código, usado para o lookup no check-in (índice único).
-  qrCodeHash   String? @unique
-  /// Valor do código do QR.
-  ///
-  /// É um IDENTIFICADOR OPAQUE de credencial (equivalente a um número de
-  /// ingresso), não um segredo de autenticação como uma senha: o convidado
-  /// precisa reexibir o mesmo código. Por isso é armazenado de forma
-  /// recuperável — mas NUNCA contém CPF nem qualquer dado pessoal.
-  qrCodeValue  String?
-  /// Código completo para exibição/auditoria (mesmo valor de `qrCodeValue`).
-  qrCodePrefix String?
-  qrCodeIssuedAt DateTime?
-  qrRevokedAt  DateTime?
-
-  guest   Guest               @relation(fields: [guestId], references: [id], onDelete: Cascade)
-  response InvitationResponse?
-  checkIns CheckIn[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([status])
-  @@map("invitations")
-}
-
-/// Dados preenchidos pelo convidado no ato da resposta (RSVP).
-model InvitationResponse {
-  id           String @id @default(cuid())
-  invitationId String @unique
-
-  fullName  String
-  /// CPF armazenado cifrado/hasheado — nunca exposto integralmente no painel
-  cpfHash    String?
-  cpfMasked  String?
-  email      String?
-  phone      String?
-  /// Quantidade de pessoas que irão comparecer (<= allowedCompanions)
-  attendingCount Int
-  companions     String? /// [{ "name": "Maria", "document": null }]
-  message        String?
-
-  ip        String?
-  userAgent String?
-  actorId   String? /// usuário que registrou (quando registro manual pelo admin)
-
-  invitation Invitation @relation(fields: [invitationId], references: [id], onDelete: Cascade)
-  actor      User?      @relation("ResponseActor", fields: [actorId], references: [id], onDelete: SetNull)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@map("invitation_responses")
-}
-
-/// ---------------------------------------------------------------------------
-/// Check-in
-/// ---------------------------------------------------------------------------
-
-model CheckIn {
-  id           String @id @default(cuid())
-  eventId      String
-  invitationId String
-  guestId      String?
-
-  method      CheckInMethod @default(QR_CODE)
-  peopleCount Int           @default(1)
-  /// Usuário responsável pelo check-in (recepcionista/admin)
-  operatorId  String?
-  operatorLabel String? /// "Recepção 01"
-  /// Token/prefixo utilizado (auditoria) — nunca o token em claro
-  tokenPrefix String?
-  ip          String?
-  userAgent   String?
-  notes       String?
-  /// Marca check-ins liberados manualmente após alerta de duplicidade
-  overriddenFromCheckInId String?
-
-  event      Event      @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  invitation Invitation @relation(fields: [invitationId], references: [id], onDelete: Cascade)
-  operator   User?      @relation(fields: [operatorId], references: [id], onDelete: SetNull)
-
-  createdAt DateTime @default(now())
-
-  @@index([eventId])
-  @@index([invitationId])
-  @@index([createdAt])
-  @@map("check_ins")
-}
-
-/// ---------------------------------------------------------------------------
-/// Notificações (e-mail / WhatsApp)
-/// ---------------------------------------------------------------------------
-
-model Notification {
-  id      String @id @default(cuid())
-  eventId String?
-  guestId String?
-  invitationId String?
-
-  channel NotificationChannel
-  status  NotificationStatus  @default(QUEUED)
-  to      String?
-  subject String?
-  body    String?
-  provider String?
-  error   String?
-  sentAt  DateTime?
-  metadata String?
-
-  event Event? @relation(fields: [eventId], references: [id], onDelete: SetNull)
-
-  createdAt DateTime @default(now())
-
-  @@index([eventId])
-  @@index([status])
-  @@map("notifications")
-}
-
-/// ---------------------------------------------------------------------------
-/// Auditoria e LGPD
-/// ---------------------------------------------------------------------------
-
-model AuditLog {
-  id     String  @id @default(cuid())
-  userId String?
-  eventId String?
-  actorRole Role?
-  actorName String?
-
-  action String /// "guest.created", "invitation.sent", "checkin.validated"...
-  entity String? /// "Guest" | "Invitation" | ...
-  entityId String?
-  description String?
-  metadata String?
-  ip       String?
-  userAgent String?
-
-  user  User?  @relation(fields: [userId], references: [id], onDelete: SetNull)
-  event Event? @relation(fields: [eventId], references: [id], onDelete: SetNull)
-
-  createdAt DateTime @default(now())
-
-  @@index([eventId])
-  @@index([userId])
-  @@index([action])
-  @@index([createdAt])
-  @@map("audit_logs")
-}
-
-/// Registro de consentimento LGPD do convidado.
-model DataConsent {
-  id           String @id @default(cuid())
-  invitationId String
-  guestId      String?
-
-  purpose   String /// "rsvp", "event_access"...
-  granted   Boolean @default(true)
-  textVersion String @default("1.0")
-  ip        String?
-  userAgent String?
-
-  createdAt DateTime @default(now())
-
-  @@index([invitationId])
-  @@map("data_consents")
 }
